@@ -1,10 +1,14 @@
 import com.sun.java.swing.plaf.windows.WindowsClassicLookAndFeel;
 import javafx.util.Pair;
 import javax.swing.*;
+import javax.swing.filechooser.FileFilter;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.util.LinkedList;
+import java.util.Random;
+
 import org.apache.batik.swing.JSVGCanvas;
 import org.apache.batik.swing.gvt.GVTTreeRendererAdapter;
 import org.apache.batik.swing.gvt.GVTTreeRendererEvent;
@@ -66,6 +70,7 @@ public class MainWindow {
     private JTextField endTextA;
     private JButton importFileChooseButton;
     private JSVGCanvas svgPanel;
+    private JButton dotPathButton;
     private WordGraph wordGraph;
     private File chosenFile;
     public MainWindow() {
@@ -99,12 +104,16 @@ public class MainWindow {
                 }
                 else if(radioButton2.isSelected()) {
                     wordGraph = new WordGraph(textArea1.getText());
-                    String svgPath = wordGraph.exportSVGFile().toURI().toString();
-                    System.out.println(svgPath);
-                    BufferedImage bufferedImage = wordGraph.exportFullImage();
-//                    imageZone.removeAll();
-                    svgPanel.setURI(svgPath);
-                    svgPanel.setEnableZoomInteractor(true);
+                    try{
+                        String svgPath = wordGraph.exportSVGFile().toURI().toString();
+                        System.out.println(svgPath);
+//                        svgPath = new File("C:\\Users\\Ding Shi\\AppData\\Local\\Temp\\graphviz_svg6771877140673811667.svg").toURI().toString();
+                        svgPanel.loadSVGDocument(svgPath);
+//                        svgPanel.setEnableZoomInteractor(true);
+                    }catch (dotPathException d0){
+                        d0.printStackTrace();
+                    }
+
 //                    System.out.println(imageZone.getSize());
 //                    JFrame jFrame = new JFrame();
 //                    jFrame.add(new JPanel(){
@@ -121,11 +130,14 @@ public class MainWindow {
 //                wordGraph = new WordGraph();
 
             });
-        textArea1.addFocusListener((FocusEvent e) -> {
+        textArea1.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(FocusEvent e) {
                 super.focusGained(e);
                 radioButton2.setSelected(true);
                 radioButton1.setSelected(false);
-            });
+            }
+        });
         textField1.addFocusListener(new FocusAdapter() {
             @Override
             public void focusGained(FocusEvent e) {
@@ -141,21 +153,84 @@ public class MainWindow {
                 if(res == null){
                     JOptionPane.showMessageDialog(mainPanel, "未找到最短路径。", "警告", JOptionPane.WARNING_MESSAGE);
                 }else{
-                    String svgPath = wordGraph.exportSVGFile().toURI().toString();
-                    System.out.println(svgPath);
-                    BufferedImage bufferedImage = wordGraph.exportFullImage();
-                    svgPanel.setURI(svgPath);
+                    try {
+                        String svgPath = wordGraph.exportSVGFile().toURI().toString();
+                        System.out.println(svgPath);
+                        BufferedImage bufferedImage = wordGraph.exportFullImage();
+                        svgPanel.setURI(svgPath);
+                    }catch(dotPathException d0){
+                        d0.printStackTrace();
+                    }
                 }
             }
         });
         showBridgeButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                wordGraph.bridgeWord(endTextA.getText().toLowerCase(),endTextB.getText().toLowerCase());
-                String svgPath = wordGraph.exportSVGFile().toURI().toString();
-                System.out.println(svgPath);
-                BufferedImage bufferedImage = wordGraph.exportFullImage();
-                svgPanel.setURI(svgPath);
+                try {
+                    wordGraph.bridgeWord(endTextA.getText().toLowerCase(), endTextB.getText().toLowerCase());
+                    String svgPath = wordGraph.exportSVGFile().toURI().toString();
+                    System.out.println(svgPath);
+//                    BufferedImage bufferedImage = wordGraph.exportFullImage();
+                    svgPanel.setURI(svgPath);
+                }catch(dotPathException d0){
+                    d0.printStackTrace();
+                }
+            }
+        });
+        dotPathButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JFileChooser jFileChooser = new JFileChooser();
+                jFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+                jFileChooser.showDialog(new JLabel(), "选择dot程序");
+                jFileChooser.setFileFilter(new FileFilter() {
+                    @Override
+                    public boolean accept(File f) {
+                        return f.getName().contains(".exe");
+                    }
+
+                    @Override
+                    public String getDescription() {
+                        return "Dot执行文件";
+                    }
+                });
+                File file = jFileChooser.getSelectedFile();
+                WordGraph.setDotPath(file.getAbsolutePath());
+                try{
+                    String response = WordGraph.testDotPath();
+                    if(!response.toLowerCase().contains("graphviz")){
+                        int i = JOptionPane.showConfirmDialog(mainPanel,"Dot程序可能有问题。是否继续使用？\n"+response,"警告",JOptionPane.WARNING_MESSAGE);
+                        if(i == JOptionPane.NO_OPTION){
+                            dotPathButton.getAction().actionPerformed(e);
+                        }
+                    }else{
+                        JOptionPane.showMessageDialog(mainPanel,"成功调用！\n"+response,"提示",JOptionPane.PLAIN_MESSAGE);
+
+                    }
+                }catch (IOException i0){
+                    JOptionPane.showMessageDialog(mainPanel,"Dot程序无法调用！","错误",JOptionPane.ERROR_MESSAGE);
+                }catch (dotPathException i0){
+                    JOptionPane.showMessageDialog(mainPanel,"Dot程序无响应！","错误",JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+        genNewText.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Random random = new Random();
+                String[] sentenceArray = textArea2.getText().split("\\s");
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < sentenceArray.length - 1; i++) {
+                    String[] bridge = wordGraph.bridgeWord(sentenceArray[i].toLowerCase().replaceAll("[^A-Za-z\\s]",""),
+                            sentenceArray[i+1].toLowerCase().replaceAll("[^A-Za-z\\s]",""));
+                    sb.append(sentenceArray[i]+" ");
+                    if(bridge.length > 0){
+                        sb.append(bridge[random.nextInt(bridge.length)]+" ");
+                    }
+                }
+                sb.append(sentenceArray[sentenceArray.length-1]);
+                textArea2.setText(sb.toString());
             }
         });
     }

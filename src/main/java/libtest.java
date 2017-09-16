@@ -28,10 +28,21 @@ public class libtest {
 //        mainFrame.setVisible(true);
 //    }
     public static void main(String[] args) {
+        WordGraph.setDotPath("D:\\graphviz-2.38\\release\\bin\\dot.exe");
+        try{System.out.println(WordGraph.testDotPath());}
+        catch(Exception e){
+            System.out.println(false);
+        }
         WordGraph wordGraph = new WordGraph("this is an example, this was an example, this could be an example");
         for(String s : wordGraph.bridgeWord("this", "an"))
             System.out.println(s);
         wordGraph.shortestPath("this","an");
+        try{
+            System.out.println(wordGraph.exportSVGFile());
+        }
+        catch (dotPathException d){
+            d.printStackTrace();
+        };
         BufferedImage bufferedImage = wordGraph.exportFullImage();
         System.out.println(wordGraph.dotGenerate().getAbsolutePath());
         JFrame jFrame = new JFrame();

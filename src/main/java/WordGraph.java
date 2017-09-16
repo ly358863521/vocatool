@@ -100,12 +100,13 @@ public class WordGraph {
     private ArrayList<String> nodeList;
     private BufferedImage fullPic = null;
     private LinkedList<LinkSource> linkSourcesList;
-    private String dotPath;
+    private static String dotPath;
     private Map<String, node> graphNodeList;
     private int weightArray[][];
     private boolean[][] edgeIsMarked;
     private boolean[] nodeIsMarked;
     private Integer[][] nextWord,prevWord;
+    private static boolean dotAvailable = false;
     public WordGraph(String s){
         // Preprocessor
         sourceString = s.replaceAll("[^A-Za-z\\s]","").toLowerCase();
@@ -161,12 +162,12 @@ public class WordGraph {
 //        graphNodeList.get(0).with(Style.SOLID,guru.nidi.graphviz.attribute.Color.RED);
     }
 
-    public String getDotPath() {
-        return dotPath;
+    public static String getDotPath() {
+        return WordGraph.dotPath;
     }
 
-    public void setDotPath(String dotPath) {
-        this.dotPath = dotPath;
+    public static void setDotPath(String dotPath) {
+        WordGraph.dotPath = dotPath;
     }
 
     private int getIndex(String word){
@@ -201,11 +202,69 @@ public class WordGraph {
             return null;
         }
     }
+    private static String testString = null;
+    public static String testDotPath() throws IOException,dotPathException{
+        Thread testThread = new Thread(() -> {
+            try {
+                Process p = Runtime.getRuntime().exec(dotPath + " -V");
+                BufferedReader br = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+                String line = null;
+                StringBuilder sb = new StringBuilder();
+                while ((line = br.readLine()) != null) {
+                    sb.append(line + "\n");
+                }
+                WordGraph.testString = sb.toString();
+            }catch (InterruptedIOException e){
+                testString = "No Response.";
+            }catch (IOException e){
+                WordGraph.testString = null;
+            }
+        } );
+        testThread.start();
+        try {
+            Thread.sleep(400);
+        }catch (InterruptedException e){
+            e.printStackTrace();
+        }
+        testThread.interrupt();
+        if(testString.contains("dot") && testString.contains("graphviz"))
+            WordGraph.dotAvailable = true;
+        if(testString == null)
+            throw new IOException();
+        if(testString.equals("No Response."))
+            throw new dotPathException();
+        return testString;
+    }
 
-    public File exportSVGFile() {
+    public File exportSVGFile() throws dotPathException {
         try{
+            if(!WordGraph.dotAvailable)
+                throw new dotPathException();
             File svgTemp = File.createTempFile("graphviz_svg",".svg");
-
+            File dotTemp = this.dotGenerate();
+            Process p = Runtime.getRuntime().exec(String.format("%s -Tsvg %s -o %s", WordGraph.dotPath,dotTemp.getAbsolutePath(),svgTemp.getAbsolutePath()));
+            while(p.isAlive())
+                try{
+                    Thread.sleep(10);
+                    System.out.println("Wait for 10ms");
+                }catch (InterruptedException e){
+                }
+            // Fix incompatible svg line.
+            // 0x01 212D2D20
+            // 0x31 22202D2D
+            RandomAccessFile raf = new RandomAccessFile(svgTemp,"rw");
+            raf.seek(0x01);
+            raf.writeInt(0x212D2D20);
+            raf.seek(0x31);
+            raf.writeInt(0x22202D2D);
+            raf.close();
+//                    BufferedReader br = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+//                    String line = null;
+//                    StringBuilder sb = new StringBuilder();
+//                    while ((line = br.readLine()) != null) {
+//                        sb.append(line + "\n");
+//                    }
+//                    WordGraph.testString = sb.toString();
             return svgTemp;
         }catch (IOException i0){
             return null;
@@ -213,15 +272,21 @@ public class WordGraph {
     }
 
     public String[] bridgeWord(String a, String b){
+        this.linkSourcesList.stream().forEach((LinkSource l) ->{l.setColor(false);});
+        this.graphNodeList.values().stream().forEach(node -> {node.setColor(false);});
         HashSet<Integer> aConnection = new HashSet<>();
         HashSet<Integer> bConnection = new HashSet<>();
-        Collections.addAll(aConnection, Arrays.copyOfRange(nextWord[getIndex(a)],1,nextWord[getIndex(a)][0]+1));
-        Collections.addAll(bConnection, Arrays.copyOfRange(prevWord[getIndex(b)],1,prevWord[getIndex(b)][0]+1));
+        try {
+            Collections.addAll(aConnection, Arrays.copyOfRange(nextWord[getIndex(a)], 1, nextWord[getIndex(a)][0] + 1));
+            Collections.addAll(bConnection, Arrays.copyOfRange(prevWord[getIndex(b)], 1, prevWord[getIndex(b)][0] + 1));
+        }catch (ArrayIndexOutOfBoundsException e){
+            return new String[0];
+        }
         aConnection.retainAll(bConnection);
         String[] result = new String[aConnection.size()];
         Integer[] indexArray = aConnection.toArray(new Integer[aConnection.size()]);
         for(int i = 0;i < aConnection.size();i++){
-            result[i] = wordArray[indexArray[i]];
+            graphNodeList.get(result[i] = wordArray[indexArray[i]]).setColor(true);
         }
         // Color
         Arrays.fill(nodeIsMarked,false);
@@ -229,7 +294,7 @@ public class WordGraph {
             nodeIsMarked[i] = true;
         }
         // Redraw Graph
-        redraw();
+//        redraw();
         return result;
     }
 
@@ -281,10 +346,12 @@ public class WordGraph {
         // 得到集合
         // Occurrence Table
         // 返回最小距离，开始位置
+        this.linkSourcesList.stream().forEach((LinkSource l) ->{l.setColor(false);});
+        this.graphNodeList.values().stream().forEach(node -> {node.setColor(false);});
         int start = getIndex(a);
         int end = getIndex(b);
         // 注意 这里没有end > start，因为start和end可能重复多次
-        if(start > 0 && end > 0){
+        if(start >= 0 && end >= 0){
             LinkedList<Integer> startOccurrence = new LinkedList<>();
             LinkedList<Integer> endOccurrence = new LinkedList<>();
             for(Integer i = 0;i < stringArray.length;i++){
