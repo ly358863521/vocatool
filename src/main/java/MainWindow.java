@@ -2,6 +2,7 @@ import com.sun.java.swing.plaf.windows.WindowsClassicLookAndFeel;
 import javafx.util.Pair;
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
@@ -16,6 +17,10 @@ import org.apache.batik.swing.svg.SVGDocumentLoaderAdapter;
 import org.apache.batik.swing.svg.SVGDocumentLoaderEvent;
 import org.apache.batik.swing.svg.GVTTreeBuilderAdapter;
 import org.apache.batik.swing.svg.GVTTreeBuilderEvent;
+import org.apache.batik.transcoder.TranscoderException;
+import org.apache.batik.transcoder.TranscoderInput;
+import org.apache.batik.transcoder.TranscoderOutput;
+import org.apache.batik.transcoder.image.PNGTranscoder;
 
 public class MainWindow {
     private JTabbedPane tabbedPane1;
@@ -96,24 +101,21 @@ public class MainWindow {
                         if(chosenFile == null || !chosenFile.getAbsolutePath().equals(textField1.getText())){
                             chosenFile = new File(textField1.getText());
                         }
-                        InputStreamReader inputStreamReader = new InputStreamReader(new FileInputStream(chosenFile));
+                        BufferedReader bufferedReader = new BufferedReader(new FileReader(chosenFile));
+                        StringBuilder document = new StringBuilder();
+                        while(true) {
+                            String read = bufferedReader.readLine();
+                            if(read == null)break;
+                            document.append(read);
+                        }
+                        wordGraph = new WordGraph(document.toString());
                     } catch (IOException e0) {
-                        // File is removed after selected.
+                        // File is missing after selected.
                         JOptionPane.showMessageDialog(mainPanel, "文件读取失败！", "错误", JOptionPane.ERROR_MESSAGE);
                     }
                 }
                 else if(radioButton2.isSelected()) {
                     wordGraph = new WordGraph(textArea1.getText());
-                    try{
-                        String svgPath = wordGraph.exportSVGFile().toURI().toString();
-                        System.out.println(svgPath);
-//                        svgPath = new File("C:\\Users\\Ding Shi\\AppData\\Local\\Temp\\graphviz_svg6771877140673811667.svg").toURI().toString();
-                        svgPanel.loadSVGDocument(svgPath);
-//                        svgPanel.setEnableZoomInteractor(true);
-                    }catch (dotPathException d0){
-                        d0.printStackTrace();
-                    }
-
 //                    System.out.println(imageZone.getSize());
 //                    JFrame jFrame = new JFrame();
 //                    jFrame.add(new JPanel(){
@@ -128,7 +130,15 @@ public class MainWindow {
 //                    jFrame.setVisible(true);
                 }
 //                wordGraph = new WordGraph();
-
+            try{
+                String svgPath = wordGraph.exportSVGFile().toURI().toString();
+                System.out.println(svgPath);
+//                        svgPath = new File("C:\\Users\\Ding Shi\\AppData\\Local\\Temp\\graphviz_svg6771877140673811667.svg").toURI().toString();
+                svgPanel.loadSVGDocument(svgPath);
+//                        svgPanel.setEnableZoomInteractor(true);
+            }catch (dotPathException d0){
+                d0.printStackTrace();
+            }
             });
         textArea1.addFocusListener(new FocusAdapter() {
             @Override
@@ -183,18 +193,9 @@ public class MainWindow {
             public void actionPerformed(ActionEvent e) {
                 JFileChooser jFileChooser = new JFileChooser();
                 jFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+                jFileChooser.setFileFilter(new FileNameExtensionFilter(
+                        "GraphViz dot(*.exe)", "exe"));
                 jFileChooser.showDialog(new JLabel(), "选择dot程序");
-                jFileChooser.setFileFilter(new FileFilter() {
-                    @Override
-                    public boolean accept(File f) {
-                        return f.getName().contains(".exe");
-                    }
-
-                    @Override
-                    public String getDescription() {
-                        return "Dot执行文件";
-                    }
-                });
                 File file = jFileChooser.getSelectedFile();
                 WordGraph.setDotPath(file.getAbsolutePath());
                 try{
@@ -231,6 +232,35 @@ public class MainWindow {
                 }
                 sb.append(sentenceArray[sentenceArray.length-1]);
                 textArea2.setText(sb.toString());
+            }
+        });
+        exportButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try{
+                    JFileChooser jFileChooser = new JFileChooser();
+                    jFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+                    jFileChooser.setFileFilter(new FileNameExtensionFilter(
+                            "PNG(.png)", "png"));
+                    jFileChooser.setFileFilter(new FileNameExtensionFilter(
+                            "SVG(.svg)", "svg"));
+                    int i = jFileChooser.showDialog(new JLabel(), "选择dot程序");
+                    if(i == JFileChooser.CANCEL_OPTION){
+                        return;
+                    }
+                    File file = jFileChooser.getSelectedFile();
+                    switch(jFileChooser.getFileFilter().getDescription()){
+                        case "PNG(.png)":wordGraph.exportPNG(file);break;
+                        case "SVG(.svg)":wordGraph.exportSVGFile().renameTo(file);break;
+                        default:System.out.println("No such option");
+                    }
+                }catch(TranscoderException t){
+                    t.printStackTrace();
+                }catch (dotPathException d){
+                    JOptionPane.showMessageDialog(mainPanel,"dot程序未配置。","错误",JOptionPane.ERROR_MESSAGE);
+                }catch (FileNotFoundException f){
+                    JOptionPane.showMessageDialog(mainPanel,"无法创建文件。","错误",JOptionPane.ERROR_MESSAGE);
+                }
             }
         });
     }

@@ -1,5 +1,9 @@
 import com.sun.deploy.xml.XMLParser;
 import jnr.ffi.annotations.In;
+import org.apache.batik.transcoder.TranscoderException;
+import org.apache.batik.transcoder.TranscoderInput;
+import org.apache.batik.transcoder.TranscoderOutput;
+import org.apache.batik.transcoder.image.PNGTranscoder;
 import sun.awt.image.ImageWatched;
 
 
@@ -269,6 +273,13 @@ public class WordGraph {
         }catch (IOException i0){
             return null;
         }
+    }
+
+    public void exportPNG(File file) throws dotPathException,FileNotFoundException,TranscoderException{
+        PNGTranscoder pngTranscoder = new PNGTranscoder();
+        TranscoderInput input = new TranscoderInput(new FileInputStream(this.exportSVGFile()));
+        TranscoderOutput output = new TranscoderOutput(new FileOutputStream(file));
+        pngTranscoder.transcode(input,output);
     }
 
     public String[] bridgeWord(String a, String b){
