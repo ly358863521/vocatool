@@ -1,11 +1,6 @@
 import com.sun.deploy.xml.XMLParser;
-import guru.nidi.graphviz.attribute.*;
-import guru.nidi.graphviz.attribute.Color;
-import guru.nidi.graphviz.engine.Format;
-import guru.nidi.graphviz.engine.Graphviz;
-import guru.nidi.graphviz.model.*;
-import guru.nidi.graphviz.model.Label;
 import jnr.ffi.annotations.In;
+import sun.awt.image.ImageWatched;
 
 
 import java.awt.*;
@@ -13,30 +8,104 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.*;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import static guru.nidi.graphviz.model.Factory.node;
-import static guru.nidi.graphviz.model.Factory.graph;
-import static guru.nidi.graphviz.model.Factory.to;
 
 /**
  *
  */
-public class WordGraph {
-    String sourceString;
-    String[] stringArray, wordArray;
-    int nodeCount;
-    int[] wordWeight;
-    ArrayList<String> nodeList;
-    BufferedImage fullPic = null;
-    BufferedImage[] imageLib;
-    BufferedImage[] newImage;
-    Graph fullGraph;
+class dotPathException extends Exception{}
+class LinkSource{
+    private String start;
+    private String end;
+    private int weight;
+    private boolean color = false;
 
-    int weightArray[][];
-    boolean[][] edgeIsMarked;
-    boolean[] nodeIsMarked;
-    Integer[][] nextWord,prevWord;
+    public LinkSource(String start, String end, int weight, boolean color) {
+        this.start = start;
+        this.end = end;
+        this.weight = weight;
+        this.color = color;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder string= new StringBuilder();
+        string.append(String.format("\t%s -> %s [label=\"%d\"", start, end,weight));
+        if(color)
+            string.append(",color=red];");
+        else string.append("];");
+        return string.toString();
+    }
+
+    public void setColor(boolean color) {
+        this.color = color;
+    }
+
+    public boolean getColor() {
+        return color;
+    }
+}
+
+class node{
+    String name;
+    int weight;
+    boolean color;
+
+    public node(String name, boolean color) {
+        this.name = name;
+        this.color = color;
+    }
+
+    public node(String name, int weight, boolean color) {
+        this.name = name;
+        this.weight = weight;
+        this.color = color;
+    }
+
+    public node(String name) {
+        this.name = name;
+        this.color = false;
+    }
+
+    @Override
+    public String toString() {
+        if(color)
+            return String.format("\t%s [color=red,weight=%d];", name,weight);
+        return String.format("\t%s [weight=%d];", name,weight);
+    }
+
+    public void setColor(boolean color) {
+        this.color = color;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public node getThis(){
+        return this;
+    }
+
+    public boolean getColor() {
+        return color;
+    }
+}
+
+public class WordGraph {
+    private String sourceString;
+    private String[] stringArray, wordArray;
+    private int nodeCount;
+    private Map<String, Integer> wordWeight;
+    private ArrayList<String> nodeList;
+    private BufferedImage fullPic = null;
+    private LinkedList<LinkSource> linkSourcesList;
+    private String dotPath;
+    private Map<String, node> graphNodeList;
+    private int weightArray[][];
+    private boolean[][] edgeIsMarked;
+    private boolean[] nodeIsMarked;
+    private Integer[][] nextWord,prevWord;
     public WordGraph(String s){
         // Preprocessor
         sourceString = s.replaceAll("[^A-Za-z\\s]","").toLowerCase();
@@ -44,7 +113,7 @@ public class WordGraph {
         HashSet<String> nodeSet = new HashSet<>();
         Collections.addAll(nodeSet,stringArray);
         nodeCount = nodeSet.size();
-        wordWeight = new int[nodeCount];
+        wordWeight = new HashMap<>(100);
         weightArray = new int[nodeCount][nodeCount];
         edgeIsMarked = new boolean[nodeCount][nodeCount];
         nodeIsMarked = new boolean[nodeCount];
@@ -65,18 +134,19 @@ public class WordGraph {
             // Possible Bug: Unconcurrent ID.
             int fromIndex = getIndex(stringArray[i]);
             int toIndex = getIndex(stringArray[i+1]);
-            wordWeight[fromIndex]  += stringArray.length - i;
+            wordWeight.replace(stringArray[i],wordWeight.getOrDefault(stringArray[i],0) + stringArray.length - i);
             weightArray[fromIndex][toIndex] += 1;
             nextWord[fromIndex][++nextWord[fromIndex][0]] = toIndex;
             prevWord[toIndex][++prevWord[toIndex][0]] = fromIndex;
         }
-        List<Node> graphNodeList = this.nodeList.stream().map(param -> {return node(param).with("weight",wordWeight[getIndex(param)]);}).collect(Collectors.toList());
-        LinkedList<LinkSource> linkSourcesList = new LinkedList<>();
+        this.graphNodeList = this.nodeList.stream().collect(Collectors.toMap(Function.identity(), (name) -> new node(name, wordWeight.getOrDefault(name,1) ,false)));
+        linkSourcesList = new LinkedList<>();
         // Connecting
         for (int i = 0; i < wordArray.length; i++){
             for (int j = 0; j < wordArray.length;j++){
                 if(i != j && weightArray[i][j] != 0){
-                    linkSourcesList.push(graphNodeList.get(i).link(to(graphNodeList.get(j)).with("weight",wordWeight[i]).with(Label.of(String.valueOf(weightArray[i][j])))));
+                    //linkSourcesList.push(graphNodeList.get(i).link(to(graphNodeList.get(j)).with("weight",wordWeight[i]).with(Label.of(String.valueOf(weightArray[i][j])))));
+                    linkSourcesList.add(new LinkSource(wordArray[i], wordArray[j], weightArray[i][j],false));
                 }
             }
         }
@@ -87,8 +157,16 @@ public class WordGraph {
 //                return 0;
 //            }else return -1;
 //        });
-        fullGraph = graph("Word Diagram").directed().with( linkSourcesList.toArray(new LinkSource[linkSourcesList.size()]));
+//        fullGraph = graph("Word Diagram").directed().with( linkSourcesList.toArray(new LinkSource[linkSourcesList.size()]));
 //        graphNodeList.get(0).with(Style.SOLID,guru.nidi.graphviz.attribute.Color.RED);
+    }
+
+    public String getDotPath() {
+        return dotPath;
+    }
+
+    public void setDotPath(String dotPath) {
+        this.dotPath = dotPath;
     }
 
     private int getIndex(String word){
@@ -96,24 +174,38 @@ public class WordGraph {
     }
 
     public BufferedImage exportFullImage(){
-        return Graphviz.fromGraph(fullGraph).render(Format.PNG).toImage();
+        return null;
+    }
+
+    public File dotGenerate(){
+        try {
+            File dotFile = File.createTempFile("graphviz_dot", ".dot");
+            BufferedWriter writer = new BufferedWriter(new FileWriter(dotFile));
+            writer.write("digraph G{");
+            writer.newLine();
+            // Color node
+            for(node i:this.graphNodeList.values()){
+                writer.write(i.toString());
+                writer.newLine();
+            }
+            // Add edges
+            for(LinkSource linkSource : this.linkSourcesList){
+                writer.write(linkSource.toString());
+                writer.newLine();
+            }
+            writer.write("}");
+            writer.newLine();
+            writer.close();
+            return dotFile;
+        }catch (IOException i0){
+            return null;
+        }
     }
 
     public File exportSVGFile() {
         try{
             File svgTemp = File.createTempFile("graphviz_svg",".svg");
-            Graphviz.fromGraph(fullGraph).render(Format.SVG).toFile(svgTemp);
-            RandomAccessFile raf = new RandomAccessFile(svgTemp.getAbsolutePath(),"rw");
-            byte[] bytes = new byte[0x50];
-            raf.seek(0xF0);
-            raf.read(bytes,0,0x50);
-            String content = new String(bytes);
-            char[] spacetoReplace = new char[20];
-            Arrays.fill(spacetoReplace,' ');
-            String newContent = content.replaceAll("(?i)FFFFFF","F0F0F0").replaceAll("stroke=\"transparent\"",new String(spacetoReplace));
-            raf.seek(0xF0);
-            for(int i:newContent.getBytes())
-                raf.write(i);
+
             return svgTemp;
         }catch (IOException i0){
             return null;
@@ -145,13 +237,13 @@ public class WordGraph {
     // Redraw with colored edge and node.
     public void redraw(){
         // Node Creation
-        List<Node> graphNodeList = new LinkedList<>();
-        for(int i =0; i< nodeList.size();i++){
-            if(nodeIsMarked[i])
-                graphNodeList.add(node(nodeList.get(i)).with(Style.FILLED,Color.hsv(0,0.62,1)).with("weight",wordWeight[getIndex(nodeList.get(i))])); // Watermelon Red
-            else
-                graphNodeList.add(node(nodeList.get(i)).with("weight",wordWeight[getIndex(nodeList.get(i))]));
-        }
+//        List<node> graphNodeList = new LinkedList<>();
+//        for(int i =0; i< nodeList.size();i++){
+//            if(nodeIsMarked[i])
+//                graphNodeList.add(node(nodeList.get(i)).with(Style.FILLED,Color.hsv(0,0.62,1)).with("weight",wordWeight[getIndex(nodeList.get(i))])); // Watermelon Red
+//            else
+//                graphNodeList.add(node(nodeList.get(i)).with("weight",wordWeight[getIndex(nodeList.get(i))]));
+//        }
 //        graphNodeList.sort((Node a, Node b) -> {
 //            if(wordWeight[graphNodeList.indexOf(a)] > wordWeight[graphNodeList.indexOf(b)]){
 //                return 1;
@@ -159,7 +251,7 @@ public class WordGraph {
 //                return 0;
 //            }else return -1;
 //        });
-        LinkedList<LinkSource> linkSourcesList = new LinkedList<>();
+        this.linkSourcesList.clear();
 //        // Connecting
 //        for (int i = 0; i < stringArray.length - 1; i++) {
 //            // Possible Bug: Unconcurrent ID.
@@ -172,13 +264,17 @@ public class WordGraph {
             for (int j = 0; j < wordArray.length;j++){
                 if(i != j && weightArray[i][j] != 0){
                     if(edgeIsMarked[i][j])
-                        linkSourcesList.push(graphNodeList.get(i).link(to(graphNodeList.get(j)).with("weight",wordWeight[i]).with(Label.of(String.valueOf(weightArray[i][j])),Color.hsv(0,0.62,1))));
+                        linkSourcesList.add(new LinkSource(wordArray[i],wordArray[j],weightArray[i][j],true));
                     else
-                        linkSourcesList.push(graphNodeList.get(i).link(to(graphNodeList.get(j)).with("weight",wordWeight[i]).with(Label.of(String.valueOf(weightArray[i][j])))));
+                        linkSourcesList.add(new LinkSource(wordArray[i],wordArray[j],weightArray[i][j],false));
                 }
             }
         }
-        fullGraph = graph("Word Diagram").directed().with( linkSourcesList.toArray(new LinkSource[linkSourcesList.size()]));
+        for(int i = 0;i < nodeIsMarked.length;i++){
+            if(nodeIsMarked[i]){
+                graphNodeList.get(wordArray[i]).setColor(true);
+            }
+        }
     }
 
     public Integer[] shortestPath(String a, String b){
@@ -203,9 +299,7 @@ public class WordGraph {
             for(Integer i:startOccurrence)
                 for(Integer j:endOccurrence)
                     // 起始超过了结束
-                    if(i > j)
-                        continue;
-                    else if(j - i < distance){
+                    if(j - i < distance){
                         startIndex.clear();
                         distance = j - i;
                         startIndex.add(i);
@@ -236,9 +330,4 @@ public class WordGraph {
         return i;
     }
 
-    public Graph toGraph(String name){
-        LinkedList<LinkSource> linkedList = new LinkedList<>();
-        // Performance issue: Parallelizable function.
-        return graph(name).with();
-    }
 }

@@ -1,5 +1,4 @@
 import com.sun.java.swing.plaf.windows.WindowsClassicLookAndFeel;
-import guru.nidi.graphviz.model.Graph;
 import javafx.util.Pair;
 import javax.swing.*;
 import java.awt.*;
@@ -70,9 +69,7 @@ public class MainWindow {
     private WordGraph wordGraph;
     private File chosenFile;
     public MainWindow() {
-        importFileChooseButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
+        importFileChooseButton.addActionListener((ActionEvent e) -> {
                 JFileChooser jFileChooser = new JFileChooser();
                 jFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
                 jFileChooser.showDialog(new JLabel(), "导入");
@@ -87,11 +84,8 @@ public class MainWindow {
                     JOptionPane.showMessageDialog(mainPanel, "未选择任何文件！", "提示",JOptionPane.WARNING_MESSAGE);
                     textField1.setText("");
                 }
-            }
-        });
-        generateButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
+            });
+        generateButton.addActionListener((ActionEvent e) -> {
                 if(radioButton1.isSelected()) {
                     try {
                         if(chosenFile == null || !chosenFile.getAbsolutePath().equals(textField1.getText())){
@@ -126,16 +120,12 @@ public class MainWindow {
                 }
 //                wordGraph = new WordGraph();
 
-            }
-        });
-        textArea1.addFocusListener(new FocusAdapter() {
-            @Override
-            public void focusGained(FocusEvent e) {
+            });
+        textArea1.addFocusListener((FocusEvent e) -> {
                 super.focusGained(e);
                 radioButton2.setSelected(true);
                 radioButton1.setSelected(false);
-            }
-        });
+            });
         textField1.addFocusListener(new FocusAdapter() {
             @Override
             public void focusGained(FocusEvent e) {

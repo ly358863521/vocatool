@@ -3,9 +3,6 @@
  * Minimum JRE : 1.8
  */
 
-import guru.nidi.graphviz.engine.Format;
-import guru.nidi.graphviz.engine.Graphviz;
-import guru.nidi.graphviz.model.Graph;
 
 import javax.swing.*;
 import java.awt.*;
@@ -20,7 +17,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
 
-import static guru.nidi.graphviz.model.Factory.*;
 public class libtest {
 
     
@@ -35,9 +31,9 @@ public class libtest {
         WordGraph wordGraph = new WordGraph("this is an example, this was an example, this could be an example");
         for(String s : wordGraph.bridgeWord("this", "an"))
             System.out.println(s);
-        wordGraph.shortestPath("he","tactician");
+        wordGraph.shortestPath("this","an");
         BufferedImage bufferedImage = wordGraph.exportFullImage();
-        wordGraph.exportSVGFile();
+        System.out.println(wordGraph.dotGenerate().getAbsolutePath());
         JFrame jFrame = new JFrame();
         jFrame.add(new JPanel(){
             @Override
@@ -75,19 +71,19 @@ public class libtest {
         container.add(section3, new GridBagConstraints(GridBagConstraints.RELATIVE,0,2,9,1,1,GridBagConstraints.CENTER,GridBagConstraints.NONE,new Insets(10,10,10,10),10,10));
     }
 
-    public static void showGraph(Graph graph){
-        final BufferedImage bufferedImage = Graphviz.fromGraph(graph).width(200).render(Format.PNG).toImage();
-        JFrame jFrame = new JFrame();
-        jFrame.add(new JPanel(){
-            @Override
-            public void paintComponent(Graphics G){
-                G.drawImage(bufferedImage,0,0,null);
-            }
-        });
-        jFrame.setSize(bufferedImage.getWidth()*5/4,bufferedImage.getHeight()*5/4 );
-        jFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        jFrame.setVisible(true);
-    }
+//    public static void showGraph(Graph graph){
+//        final BufferedImage bufferedImage = Graphviz.fromGraph(graph).width(200).render(Format.PNG).toImage();
+//        JFrame jFrame = new JFrame();
+//        jFrame.add(new JPanel(){
+//            @Override
+//            public void paintComponent(Graphics G){
+//                G.drawImage(bufferedImage,0,0,null);
+//            }
+//        });
+//        jFrame.setSize(bufferedImage.getWidth()*5/4,bufferedImage.getHeight()*5/4 );
+//        jFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//        jFrame.setVisible(true);
+//    }
 
     /**
      * digest
