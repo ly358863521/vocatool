@@ -244,7 +244,7 @@ public class MainWindow {
                             "PNG(.png)", "png"));
                     jFileChooser.setFileFilter(new FileNameExtensionFilter(
                             "SVG(.svg)", "svg"));
-                    int i = jFileChooser.showDialog(new JLabel(), "选择dot程序");
+                    int i = jFileChooser.showDialog(new JLabel(), "导出");
                     if(i == JFileChooser.CANCEL_OPTION){
                         return;
                     }

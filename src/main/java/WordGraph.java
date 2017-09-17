@@ -309,6 +309,31 @@ public class WordGraph {
         return result;
     }
 
+    public void randomPath(){
+        this.linkSourcesList.stream().forEach((LinkSource l) ->{l.setColor(false);});
+        this.graphNodeList.values().stream().forEach(node -> {node.setColor(false);});
+        new Random().nextInt(nodeCount);
+    }
+
+    public int allShortestPath(String begin,){
+        int i = 0;
+        for (; i < stringArray.length; i++) {
+            if(stringArray[i].equals(begin))
+                break;
+        }
+        HashSet<String> endpointSet = new HashSet<>();
+        LinkedList<String[]> route = new LinkedList<>();
+        for(int j = i+1;j < stringArray.length;j++){
+            if(!endpointSet.contains(stringArray[j])){
+                route.add(Arrays.copyOfRange(stringArray,i,j+1));
+                endpointSet.add(stringArray[j]);
+            }
+        }
+        for(String[] strings : route){
+            System.out.println(String.join("->", strings));
+        }
+        return endpointSet.size();
+    }
 
     // Redraw with colored edge and node.
     public void redraw(){

@@ -34,6 +34,7 @@ public class libtest {
             System.out.println(false);
         }
         WordGraph wordGraph = new WordGraph("this is an example, this was an example, this could be an example");
+        System.out.println(wordGraph.allShortestPath("this"));
         for(String s : wordGraph.bridgeWord("this", "an"))
             System.out.println(s);
         wordGraph.shortestPath("this","an");
