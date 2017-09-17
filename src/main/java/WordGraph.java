@@ -315,7 +315,7 @@ public class WordGraph {
         new Random().nextInt(nodeCount);
     }
 
-    public int allShortestPath(String begin,){
+    public int allShortestPath(String begin){
         int i = 0;
         for (; i < stringArray.length; i++) {
             if(stringArray[i].equals(begin))
