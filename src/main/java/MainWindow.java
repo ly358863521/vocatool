@@ -30,7 +30,6 @@ public class MainWindow {
     private JTextArea textArea1;
     private JButton generateButton;
     private JButton randomBegin;
-    private JButton nextStep;
     private JButton exportRoute;
     private JTextField textField3;
     private JButton singleSP;
@@ -78,6 +77,7 @@ public class MainWindow {
     private JButton dotPathButton;
     private WordGraph wordGraph;
     private File chosenFile;
+    private LinkedList<String> randomRoute;
     public MainWindow() {
         importFileChooseButton.addActionListener((ActionEvent e) -> {
                 JFileChooser jFileChooser = new JFileChooser();
@@ -354,6 +354,42 @@ public class MainWindow {
                     subFrame.setVisible(true);
                 }catch (dotPathException d0){
                     JOptionPane.showMessageDialog(mainPanel,"dot程序未配置。","错误",JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+        randomBegin.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                LinkedList<String> path = new LinkedList<>();
+                try{
+                    File svgFile = wordGraph.randomPath(path);
+                    svgPanel.setURI(svgFile.toURI().toString());
+                    randomRoute = path;
+                }catch (dotPathException d0){
+                    JOptionPane.showMessageDialog(mainPanel,"dot程序未配置。","错误",JOptionPane.ERROR_MESSAGE);
+                    d0.printStackTrace();
+                }
+            }
+        });
+        exportRoute.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JFileChooser jFileChooser = new JFileChooser();
+                jFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+                jFileChooser.setFileFilter(new FileNameExtensionFilter("(.txt)",".txt"));
+                jFileChooser.showDialog(new JLabel(), "导入");
+                File file = jFileChooser.getSelectedFile();
+                if(!file.getName().endsWith(".txt")){
+                    file = new File(file.getAbsolutePath()+".txt");
+                }
+                String delimiter = JOptionPane.showInputDialog(mainPanel, "输入分隔符","文件分隔符",JOptionPane.PLAIN_MESSAGE);
+                try{
+                    BufferedWriter writer = new BufferedWriter(new FileWriter(file) );
+                    writer.write(String.join(delimiter,randomRoute));
+                    writer.newLine();
+                    writer.close();
+                }catch(IOException i0){
+                    JOptionPane.showMessageDialog(mainPanel,"文件无法写入!","错误",JOptionPane.ERROR_MESSAGE);
                 }
             }
         });

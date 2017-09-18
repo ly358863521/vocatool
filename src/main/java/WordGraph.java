@@ -310,11 +310,32 @@ public class WordGraph {
         return result;
     }
 
-    public void randomPath(){
+    public File randomPath(LinkedList<String> path)throws dotPathException{
         // Unfinished function
         this.linkSourcesList.stream().forEach((LinkSource l) ->{l.setColor(false);});
         this.graphNodeList.values().stream().forEach(node -> {node.setColor(false);});
-        new Random().nextInt(nodeCount);
+        Random random = new Random();
+        int start = random.nextInt(nodeCount);
+        this.cleanMark();
+        while (true){
+            if(this.nextWord[start][0] != 0) {
+                int nextStart = this.nextWord[start][random.nextInt(this.nextWord[start][0])+1];
+                if(this.edgeIsMarked[start][nextStart]) {
+                    path.add(wordArray[start]);
+                    break;
+                }
+                this.edgeIsMarked[start][nextStart] = true;
+                this.nodeIsMarked[start] = true;
+                this.nodeIsMarked[nextStart] = true;
+                path.add(wordArray[start]);
+                start = nextStart;
+            }else {
+                path.add(wordArray[start]);
+                break;
+            }
+        }
+        redraw();
+        return exportSVGFile();
     }
 
     public String[] allShortestPath(String begin, Map<String,File> svgFile) throws dotPathException{

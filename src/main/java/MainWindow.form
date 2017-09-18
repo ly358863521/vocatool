@@ -195,17 +195,11 @@
                               <component id="2d4ff" class="javax.swing.JButton" binding="randomBegin">
                                 <constraints/>
                                 <properties>
-                                  <text value="随机选择起点"/>
+                                  <text value="随机生成"/>
                                 </properties>
                                 <clientProperties>
                                   <html.disable class="java.lang.Boolean" value="false"/>
                                 </clientProperties>
-                              </component>
-                              <component id="27389" class="javax.swing.JButton" binding="nextStep">
-                                <constraints/>
-                                <properties>
-                                  <text value="随机到下一个节点"/>
-                                </properties>
                               </component>
                               <component id="6850b" class="javax.swing.JButton" binding="exportRoute">
                                 <constraints/>
