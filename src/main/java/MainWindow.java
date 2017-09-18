@@ -222,7 +222,11 @@ public class MainWindow {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    wordGraph.bridgeWord(endTextA.getText().toLowerCase(), endTextB.getText().toLowerCase());
+                    try {
+                        wordGraph.bridgeWord(endTextA.getText().toLowerCase(), endTextB.getText().toLowerCase());
+                    }catch (ArrayIndexOutOfBoundsException e2){
+                        JOptionPane.showMessageDialog(mainPanel,"图中没有这两个词！","错误",JOptionPane.ERROR_MESSAGE);
+                    }
                     String svgPath = wordGraph.exportSVGFile().toURI().toString();
                     System.out.println(svgPath);
 //                    BufferedImage bufferedImage = wordGraph.exportFullImage();

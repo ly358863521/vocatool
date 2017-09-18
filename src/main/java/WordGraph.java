@@ -19,6 +19,8 @@ import java.util.stream.Collectors;
  *
  */
 class dotPathException extends Exception{}
+class UnreachableNode extends Exception{}
+
 class LinkSource{
     private String start;
     private String end;
@@ -283,17 +285,13 @@ public class WordGraph {
         pngTranscoder.transcode(input,output);
     }
 
-    public String[] bridgeWord(String a, String b){
+    public String[] bridgeWord(String a, String b) throws ArrayIndexOutOfBoundsException{
         this.linkSourcesList.stream().forEach((LinkSource l) ->{l.setColor(false);});
         this.graphNodeList.values().stream().forEach(node -> {node.setColor(false);});
         HashSet<Integer> aConnection = new HashSet<>();
         HashSet<Integer> bConnection = new HashSet<>();
-        try {
-            Collections.addAll(aConnection, Arrays.copyOfRange(nextWord[getIndex(a)], 1, nextWord[getIndex(a)][0] + 1));
-            Collections.addAll(bConnection, Arrays.copyOfRange(prevWord[getIndex(b)], 1, prevWord[getIndex(b)][0] + 1));
-        }catch (ArrayIndexOutOfBoundsException e){
-            return new String[0];
-        }
+        Collections.addAll(aConnection, Arrays.copyOfRange(nextWord[getIndex(a)], 1, nextWord[getIndex(a)][0] + 1));
+        Collections.addAll(bConnection, Arrays.copyOfRange(prevWord[getIndex(b)], 1, prevWord[getIndex(b)][0] + 1));
         aConnection.retainAll(bConnection);
         String[] result = new String[aConnection.size()];
         Integer[] indexArray = aConnection.toArray(new Integer[aConnection.size()]);
@@ -314,26 +312,7 @@ public class WordGraph {
         // Unfinished function
         this.linkSourcesList.stream().forEach((LinkSource l) ->{l.setColor(false);});
         this.graphNodeList.values().stream().forEach(node -> {node.setColor(false);});
-        Random random = new Random();
-        int start = random.nextInt(nodeCount);
-        this.cleanMark();
-        while (true){
-            if(this.nextWord[start][0] != 0) {
-                int nextStart = this.nextWord[start][random.nextInt(this.nextWord[start][0])+1];
-                if(this.edgeIsMarked[start][nextStart]) {
-                    path.add(wordArray[start]);
-                    break;
-                }
-                this.edgeIsMarked[start][nextStart] = true;
-                this.nodeIsMarked[start] = true;
-                this.nodeIsMarked[nextStart] = true;
-                path.add(wordArray[start]);
-                start = nextStart;
-            }else {
-                path.add(wordArray[start]);
-                break;
-            }
-        }
+        randomList(path);
         redraw();
         return exportSVGFile();
     }
@@ -451,6 +430,9 @@ public class WordGraph {
                     }else if(j - i == distance){
                         startIndex.add(i);
                     }
+            if(fileList == null){
+                        return startIndex.toArray(new Integer[startIndex.size()]);
+            }
             for(int in = 0;in < startIndex.size();in++) {
                 Integer sI = startIndex.get(in);
                 Arrays.fill(nodeIsMarked, false);
@@ -477,6 +459,83 @@ public class WordGraph {
     private Integer abs(Integer i){
         if(i < 0) return -i;
         return i;
+    }
+
+    public String generateNewText(String inputText){
+        Random random = new Random();
+        String[] sentenceArray = inputText.split("\\s");
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < sentenceArray.length - 1; i++) {
+            String[] bridge = bridgeWord(sentenceArray[i].toLowerCase().replaceAll("[^A-Za-z\\s]",""),
+                    sentenceArray[i+1].toLowerCase().replaceAll("[^A-Za-z\\s]",""));
+            sb.append(sentenceArray[i]+" ");
+            if(bridge.length > 0){
+                sb.append(bridge[random.nextInt(bridge.length)]+" ");
+            }
+        }
+        sb.append(sentenceArray[sentenceArray.length-1]);
+        return sb.toString();
+    }
+
+
+    private void randomList(List<String> path){
+        Random random = new Random();
+        int start = random.nextInt(nodeCount);
+        this.cleanMark();
+        while (true){
+            if(this.nextWord[start][0] != 0) {
+                int nextStart = this.nextWord[start][random.nextInt(this.nextWord[start][0])+1];
+                if(this.edgeIsMarked[start][nextStart]) {
+                    path.add(wordArray[start]);
+                    break;
+                }
+                this.edgeIsMarked[start][nextStart] = true;
+                this.nodeIsMarked[start] = true;
+                this.nodeIsMarked[nextStart] = true;
+                path.add(wordArray[start]);
+                start = nextStart;
+            }else {
+                path.add(wordArray[start]);
+                break;
+            }
+        }
+    }
+    public String randomWalk(){
+        // Unfinished function
+        this.linkSourcesList.stream().forEach((LinkSource l) ->{l.setColor(false);});
+        this.graphNodeList.values().stream().forEach(node -> {node.setColor(false);});
+        LinkedList<String> path = new LinkedList<>();
+        return String.join(" ",path);
+    }
+
+    public String queryBridgeWords(String word1, String word2){
+        try {
+            String[] res = this.bridgeWord(word1, word2);
+            switch (res.length) {
+                case 0:return "No bridge words from word1 to word2!";
+                case 1:return "The bridge words from word1 to word2 are:"+res[0];
+                case 2:return String.format("The bridge words from word1 to word2 are:%s and %s", res[0],res[1]);
+                default:return String.format("The bridge words from word1 to word2 are:%s and %s:", String.join(",",Arrays.copyOfRange(res,0,res.length-2)),res[res.length-1]);
+            }
+        }catch (ArrayIndexOutOfBoundsException a) {
+            return "No word1 or word2 in the graph!";
+        }
+    }
+
+    public String calcShortestPath(String word1, String word2){
+        try {
+           Integer[] integers = shortestPath(word1, word2, null);
+           Integer distance = integers[0];
+           Integer start = integers[1];
+           LinkedList<String> stringList = new LinkedList<>();
+           for(int i = 0;i <= distance; i++){
+               stringList.add(wordArray[i+start]);
+           }
+           return String.join("->",stringList);
+        }catch (dotPathException e){
+            // 并不会有这个
+        }
+        return "Error!";
     }
 
     private void cleanMark(){
