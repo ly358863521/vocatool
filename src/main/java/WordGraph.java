@@ -111,6 +111,7 @@ public class WordGraph {
     private boolean[] nodeIsMarked;
     private Integer[][] nextWord,prevWord;
     private static boolean dotAvailable = false;
+    public static int UNREACHABLE = Integer.MAX_VALUE;
     public WordGraph(String s){
         // Preprocessor
         sourceString = s.replaceAll("[^A-Za-z\\s]","").toLowerCase();
@@ -136,7 +137,7 @@ public class WordGraph {
 
         // Node Creation
         for (int i = 0; i < stringArray.length - 1; i++) {
-            // Possible Bug: Unconcurrent ID.
+            // Possible Bug: Inconcurrent ID.
             int fromIndex = getIndex(stringArray[i]);
             int toIndex = getIndex(stringArray[i+1]);
             wordWeight.replace(stringArray[i],wordWeight.getOrDefault(stringArray[i],0) + stringArray.length - i);
@@ -310,18 +311,21 @@ public class WordGraph {
     }
 
     public void randomPath(){
+        // Unfinished function
         this.linkSourcesList.stream().forEach((LinkSource l) ->{l.setColor(false);});
         this.graphNodeList.values().stream().forEach(node -> {node.setColor(false);});
         new Random().nextInt(nodeCount);
     }
 
-    public int allShortestPath(String begin, LinkedList<String[]> routes){
+    public String[] allShortestPath(String begin, Map<String,File> svgFile) throws dotPathException{
         int i = 0;
         for (; i < stringArray.length; i++) {
             if(stringArray[i].equals(begin))
                 break;
         }
         HashSet<String> endpointSet = new HashSet<>();
+        LinkedList<String[]> routes = new LinkedList<>();
+        ArrayList<String> endpoint = new ArrayList<>();
         routes.clear();
         for(int j = i+1;j < stringArray.length;j++){
             if(stringArray[j].equals(begin)) {
@@ -331,12 +335,23 @@ public class WordGraph {
             if(!endpointSet.contains(stringArray[j])){
                 routes.add(Arrays.copyOfRange(stringArray,i,j+1));
                 endpointSet.add(stringArray[j]);
+                endpoint.add(stringArray[j]);
             }
         }
+        // 画出路线图
         for(String[] strings : routes){
             System.out.println(String.join("->", strings));
+            this.cleanMark();
+            for (int j = 0; j < strings.length - 1; j++) {
+                // Use marked array
+                this.nodeIsMarked[getIndex(strings[j])]=true;
+                this.edgeIsMarked[getIndex(strings[j])][getIndex(strings[j+1])]=true;
+            }
+            this.nodeIsMarked[getIndex(strings[strings.length-1])]=true;
+            redraw();
+            svgFile.put(strings[strings.length-1],exportSVGFile());
         }
-        return endpointSet.size();
+        return endpoint.toArray(new String[endpoint.size()]);
     }
 
     // Redraw with colored edge and node.
@@ -402,11 +417,13 @@ public class WordGraph {
             }
             LinkedList<Integer> startIndex = new LinkedList<>();
 
-            int distance = 0x7FFFFFFF; // Refactor to maxInteger.
+            int distance = WordGraph.UNREACHABLE; // Refactor to maxInteger.
             for(Integer i:startOccurrence)
                 for(Integer j:endOccurrence)
                     // 起始超过了结束
-                    if(j - i < distance){
+                    if(j < i)
+                        break;
+                    else if(j - i < distance){
                         startIndex.clear();
                         distance = j - i;
                         startIndex.add(i);
@@ -435,6 +452,17 @@ public class WordGraph {
     private Integer abs(Integer i){
         if(i < 0) return -i;
         return i;
+    }
+
+    private void cleanMark(){
+        this.linkSourcesList.stream().forEach((LinkSource l) ->{l.setColor(false);});
+        this.graphNodeList.values().stream().forEach(node -> {node.setColor(false);});
+        Arrays.fill(nodeIsMarked,false);
+        for (int i = 0; i < edgeIsMarked.length; i++) {
+            for (int j = 0; j < edgeIsMarked[0].length; j++) {
+                edgeIsMarked[i][j] = false;
+            }
+        }
     }
 
 }

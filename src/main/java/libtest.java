@@ -12,10 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.rmi.ConnectException;
 import java.rmi.server.ExportException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Set;
+import java.util.*;
 
 public class libtest {
 
@@ -27,13 +24,15 @@ public class libtest {
 //        frameInitialize(mainFrame);
 //        mainFrame.setVisible(true);
 //    }
-    public static void main(String[] args) {
+    public static void main(String[] args) throws dotPathException{
         WordGraph.setDotPath("D:\\graphviz-2.38\\release\\bin\\dot.exe");
         try{System.out.println(WordGraph.testDotPath());}
         catch(Exception e){
             System.out.println(false);
         }
         WordGraph wordGraph = new WordGraph("this is an example, this was an example, this could be an example");
+        Map<String, File> fileMap = new HashMap<>();
+        wordGraph.allShortestPath("this", fileMap);
 //        System.out.println(wordGraph.allShortestPath("this"));
         for(String s : wordGraph.bridgeWord("this", "an"))
             System.out.println(s);

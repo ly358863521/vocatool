@@ -7,8 +7,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.util.LinkedList;
-import java.util.Random;
+import java.util.*;
 
 import org.apache.batik.swing.JSVGCanvas;
 import org.apache.batik.swing.gvt.GVTTreeRendererAdapter;
@@ -137,6 +136,7 @@ public class MainWindow {
                 svgPanel.loadSVGDocument(svgPath);
 //                        svgPanel.setEnableZoomInteractor(true);
             }catch (dotPathException d0){
+                JOptionPane.showMessageDialog(mainPanel,"Dot程序无响应或未配置！","错误",JOptionPane.ERROR_MESSAGE);
                 d0.printStackTrace();
             }
             });
@@ -160,15 +160,15 @@ public class MainWindow {
             @Override
             public void actionPerformed(ActionEvent e) {
                 Integer[] res = wordGraph.shortestPath(textField2.getText().toLowerCase(),textField3.getText().toLowerCase());
-                if(res == null){
+                if(res == null || res[0] == WordGraph.UNREACHABLE){
                     JOptionPane.showMessageDialog(mainPanel, "未找到最短路径。", "警告", JOptionPane.WARNING_MESSAGE);
                 }else{
                     try {
                         String svgPath = wordGraph.exportSVGFile().toURI().toString();
                         System.out.println(svgPath);
-                        BufferedImage bufferedImage = wordGraph.exportFullImage();
                         svgPanel.setURI(svgPath);
                     }catch(dotPathException d0){
+                        JOptionPane.showMessageDialog(mainPanel,"Dot程序无响应或未配置！","错误",JOptionPane.ERROR_MESSAGE);
                         d0.printStackTrace();
                     }
                 }
@@ -184,6 +184,7 @@ public class MainWindow {
 //                    BufferedImage bufferedImage = wordGraph.exportFullImage();
                     svgPanel.setURI(svgPath);
                 }catch(dotPathException d0){
+                    JOptionPane.showMessageDialog(mainPanel,"Dot程序无响应或未配置！","错误",JOptionPane.ERROR_MESSAGE);
                     d0.printStackTrace();
                 }
             }
@@ -263,6 +264,52 @@ public class MainWindow {
                 }
             }
         });
+        allSP.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Map<String, File> fileMap = new HashMap<>();
+                try {
+                    String endpoint[] = wordGraph.allShortestPath(textField2.getText(), fileMap);
+                    ArrayList<JRadioButton> radioButtonList = new ArrayList<>();
+                    JPanel boxPanel = new JPanel();
+                    boxPanel.setLayout(new BoxLayout(boxPanel,BoxLayout.Y_AXIS));
+                    JSVGCanvas svgCanvas = new JSVGCanvas();
+                    // Add radio button
+                    for(String s:endpoint){
+                        File file = fileMap.get(s);
+                        if(file != null && file.exists()){
+                            JRadioButton jRadioButton = new JRadioButton(s);
+                            jRadioButton.addActionListener((ActionEvent e0)->{
+                                svgCanvas.setURI(file.toURI().toString());
+                                radioButtonList.forEach((JRadioButton j)->{j.setSelected(false);});
+                                jRadioButton.setSelected(true);
+                            });
+                            boxPanel.add(jRadioButton);
+                            radioButtonList.add(jRadioButton);
+                        }else
+                            System.out.println(String.format("File %s removed accidentally.", s));
+                    }
+                    JFrame subFrame = new JFrame("所有最短路径");
+                    subFrame.getContentPane().setLayout(new GridBagLayout());
+                    GridBagConstraints scrollConstraint =  new GridBagConstraints();
+                    scrollConstraint.weightx = 2;
+                    scrollConstraint.weighty = 1;
+                    GridBagConstraints svgConstraint =  new GridBagConstraints();
+                    svgConstraint.weightx = 3;
+                    svgConstraint.weighty = 1;
+                    svgConstraint.gridx = GridBagConstraints.RELATIVE;
+                    svgConstraint.gridy = GridBagConstraints.NONE;
+                    svgConstraint.fill = GridBagConstraints.BOTH;
+                    subFrame.getContentPane().add(new JScrollPane(boxPanel),scrollConstraint);
+                    subFrame.getContentPane().add(svgCanvas,svgConstraint);
+                    subFrame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+                    subFrame.pack();
+                    subFrame.setVisible(true);
+                }catch (dotPathException d0){
+                    JOptionPane.showMessageDialog(mainPanel,"dot程序未配置。","错误",JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
     }
 
     public static void main(String[] args) {
@@ -275,7 +322,7 @@ public class MainWindow {
         }
         MainWindow mainWindow = new MainWindow();
         frame.setContentPane(mainWindow.mainPanel);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.pack();
         frame.setVisible(true);
     }
