@@ -397,7 +397,7 @@ public class WordGraph {
         }
     }
 
-    public Integer[] shortestPath(String a, String b){
+    public Integer[] shortestPath(String a, String b, List<File> fileList)throws dotPathException{
         // 得到集合
         // Occurrence Table
         // 返回最小距离，开始位置
@@ -422,28 +422,32 @@ public class WordGraph {
                 for(Integer j:endOccurrence)
                     // 起始超过了结束
                     if(j < i)
-                        break;
-                    else if(j - i < distance){
+                        continue;
+                    else if(j - i < distance && j > i){
                         startIndex.clear();
                         distance = j - i;
                         startIndex.add(i);
                     }else if(j - i == distance){
                         startIndex.add(i);
                     }
-            Arrays.fill(nodeIsMarked,false);
-            for(int i = 0;i < distance + 1;i++){
-                nodeIsMarked[getIndex(stringArray[i+startIndex.getFirst()])] = true;
-            }
-            for (int i = 0; i < edgeIsMarked.length; i++) {
-                for (int j = 0; j < edgeIsMarked[0].length; j++) {
-                    edgeIsMarked[i][j] = false;
+            for(int in = 0;in < startIndex.size();in++) {
+                Integer sI = startIndex.get(in);
+                Arrays.fill(nodeIsMarked, false);
+                for (int i = 0; i < distance + 1; i++) {
+                    nodeIsMarked[getIndex(stringArray[i + sI])] = true;
                 }
+                for (int i = 0; i < edgeIsMarked.length; i++) {
+                    for (int j = 0; j < edgeIsMarked[0].length; j++) {
+                        edgeIsMarked[i][j] = false;
+                    }
+                }
+                for (int i = 0; i < distance; i++) {
+                    edgeIsMarked[getIndex(stringArray[sI + i])][getIndex(stringArray[sI + i + 1])] = true;
+                }
+                redraw();
+                fileList.add(this.exportSVGFile());
             }
-            for (int i = 0; i < distance; i++) {
-                edgeIsMarked[getIndex(stringArray[startIndex.getFirst()+i])][getIndex(stringArray[startIndex.getFirst()+i+1])] = true;
-            }
-            startIndex.add(0,distance);
-            redraw();
+            startIndex.add(0, distance);
             return startIndex.toArray(new Integer[startIndex.size()]);
         }
         return null;

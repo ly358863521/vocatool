@@ -9,6 +9,7 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.*;
 
+import jdk.nashorn.internal.scripts.JO;
 import org.apache.batik.swing.JSVGCanvas;
 import org.apache.batik.swing.gvt.GVTTreeRendererAdapter;
 import org.apache.batik.swing.gvt.GVTTreeRendererEvent;
@@ -159,18 +160,61 @@ public class MainWindow {
         singleSP.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                Integer[] res = wordGraph.shortestPath(textField2.getText().toLowerCase(),textField3.getText().toLowerCase());
-                if(res == null || res[0] == WordGraph.UNREACHABLE){
-                    JOptionPane.showMessageDialog(mainPanel, "未找到最短路径。", "警告", JOptionPane.WARNING_MESSAGE);
-                }else{
-                    try {
-                        String svgPath = wordGraph.exportSVGFile().toURI().toString();
-                        System.out.println(svgPath);
-                        svgPanel.setURI(svgPath);
-                    }catch(dotPathException d0){
-                        JOptionPane.showMessageDialog(mainPanel,"Dot程序无响应或未配置！","错误",JOptionPane.ERROR_MESSAGE);
-                        d0.printStackTrace();
+                ArrayList<File> fileList = new ArrayList<>();
+                try {
+                    Integer[] res = wordGraph.shortestPath(textField2.getText().toLowerCase(), textField3.getText().toLowerCase(), fileList);
+                    if(res == null || res[0] == WordGraph.UNREACHABLE){
+                        JOptionPane.showMessageDialog(mainPanel, "未找到最短路径。", "警告", JOptionPane.WARNING_MESSAGE);
+                    }else{
+                        if(res.length == 2)
+                            svgPanel.setURI(fileList.get(0).toURI().toString());
+                        else{
+                            int reply = JOptionPane.showConfirmDialog(mainPanel, String.format("查找到%d条最短路径，路径长度为%d，是否查看所有最短路径？", res.length-1,res[0]),"查找到多条最短路径",JOptionPane.YES_NO_OPTION);
+                            if(reply == JOptionPane.YES_OPTION){
+                                ArrayList<JRadioButton> radioButtonList = new ArrayList<>();
+                                JPanel boxPanel = new JPanel();
+                                boxPanel.setLayout(new BoxLayout(boxPanel,BoxLayout.Y_AXIS));
+                                JSVGCanvas svgCanvas = new JSVGCanvas();
+                                // Add radio button
+                                for(int i = 0;i < fileList.size();i++){
+                                    File file = fileList.get(i);
+                                    if(file != null && file.exists()){
+                                        JRadioButton jRadioButton = new JRadioButton(String.format("路线 %d", i+1));
+                                        jRadioButton.addActionListener((ActionEvent e0)->{
+                                            svgCanvas.setURI(file.toURI().toString());
+                                            radioButtonList.forEach((JRadioButton j)->{j.setSelected(false);});
+                                            jRadioButton.setSelected(true);
+                                        });
+                                        boxPanel.add(jRadioButton);
+                                        radioButtonList.add(jRadioButton);
+                                    }else
+                                        System.out.println(String.format("File %d removed accidentally.", i));
+                                }
+                                JFrame subFrame = new JFrame("所有最短路径");
+                                subFrame.getContentPane().setLayout(new GridBagLayout());
+                                subFrame.getContentPane().setMinimumSize(new Dimension(600,400));
+                                GridBagConstraints scrollConstraint =  new GridBagConstraints();
+                                scrollConstraint.weightx = 2;
+                                scrollConstraint.weighty = 1;
+                                GridBagConstraints svgConstraint =  new GridBagConstraints();
+                                svgConstraint.weightx = 3;
+                                svgConstraint.weighty = 1;
+                                svgConstraint.gridx = GridBagConstraints.RELATIVE;
+                                svgConstraint.gridy = GridBagConstraints.NONE;
+                                svgConstraint.fill = GridBagConstraints.BOTH;
+                                subFrame.getContentPane().add(new JScrollPane(boxPanel),scrollConstraint);
+                                subFrame.getContentPane().add(svgCanvas,svgConstraint);
+                                subFrame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+                                subFrame.pack();
+                                subFrame.setSize(800,600);
+                                subFrame.setVisible(true);
+                            }else
+                                svgPanel.setURI(fileList.get(0).toURI().toString());
+                        }
                     }
+                }catch (dotPathException d0){
+                    d0.printStackTrace();
+                    JOptionPane.showMessageDialog(mainPanel,"Dot程序无响应或未配置！","错误",JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
@@ -271,7 +315,8 @@ public class MainWindow {
                 try {
                     String endpoint[] = wordGraph.allShortestPath(textField2.getText(), fileMap);
                     ArrayList<JRadioButton> radioButtonList = new ArrayList<>();
-                    JPanel boxPanel = new JPanel();
+                    JPanel boxPanel = new JPanel();;
+                    boxPanel.setMinimumSize(new Dimension(300,600));
                     boxPanel.setLayout(new BoxLayout(boxPanel,BoxLayout.Y_AXIS));
                     JSVGCanvas svgCanvas = new JSVGCanvas();
                     // Add radio button
@@ -291,6 +336,7 @@ public class MainWindow {
                     }
                     JFrame subFrame = new JFrame("所有最短路径");
                     subFrame.getContentPane().setLayout(new GridBagLayout());
+                    subFrame.getContentPane().setMinimumSize(new Dimension(600,400));
                     GridBagConstraints scrollConstraint =  new GridBagConstraints();
                     scrollConstraint.weightx = 2;
                     scrollConstraint.weighty = 1;
@@ -304,6 +350,7 @@ public class MainWindow {
                     subFrame.getContentPane().add(svgCanvas,svgConstraint);
                     subFrame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
                     subFrame.pack();
+                    subFrame.setSize(800,600);
                     subFrame.setVisible(true);
                 }catch (dotPathException d0){
                     JOptionPane.showMessageDialog(mainPanel,"dot程序未配置。","错误",JOptionPane.ERROR_MESSAGE);

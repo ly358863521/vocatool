@@ -36,7 +36,6 @@ public class libtest {
 //        System.out.println(wordGraph.allShortestPath("this"));
         for(String s : wordGraph.bridgeWord("this", "an"))
             System.out.println(s);
-        wordGraph.shortestPath("this","an");
         try{
             System.out.println(wordGraph.exportSVGFile());
         }
