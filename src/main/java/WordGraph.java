@@ -315,21 +315,25 @@ public class WordGraph {
         new Random().nextInt(nodeCount);
     }
 
-    public int allShortestPath(String begin){
+    public int allShortestPath(String begin, LinkedList<String[]> routes){
         int i = 0;
         for (; i < stringArray.length; i++) {
             if(stringArray[i].equals(begin))
                 break;
         }
         HashSet<String> endpointSet = new HashSet<>();
-        LinkedList<String[]> route = new LinkedList<>();
+        routes.clear();
         for(int j = i+1;j < stringArray.length;j++){
+            if(stringArray[j].equals(begin)) {
+                i = j;
+                continue;
+            }
             if(!endpointSet.contains(stringArray[j])){
-                route.add(Arrays.copyOfRange(stringArray,i,j+1));
+                routes.add(Arrays.copyOfRange(stringArray,i,j+1));
                 endpointSet.add(stringArray[j]);
             }
         }
-        for(String[] strings : route){
+        for(String[] strings : routes){
             System.out.println(String.join("->", strings));
         }
         return endpointSet.size();
