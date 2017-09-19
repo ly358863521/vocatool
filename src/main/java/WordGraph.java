@@ -144,8 +144,10 @@ public class WordGraph {
             int toIndex = getIndex(stringArray[i+1]);
             wordWeight.replace(stringArray[i],wordWeight.getOrDefault(stringArray[i],0) + stringArray.length - i);
             weightArray[fromIndex][toIndex] += 1;
-            nextWord[fromIndex][++nextWord[fromIndex][0]] = toIndex;
-            prevWord[toIndex][++prevWord[toIndex][0]] = fromIndex;
+            if(!hasObejct(nextWord[fromIndex],1,nextWord[fromIndex][0],toIndex))
+                nextWord[fromIndex][++nextWord[fromIndex][0]] = toIndex;
+            if(!hasObejct(prevWord[toIndex],1,prevWord[toIndex][0],fromIndex))
+                prevWord[toIndex][++prevWord[toIndex][0]] = fromIndex;
         }
         this.graphNodeList = this.nodeList.stream().collect(Collectors.toMap(Function.identity(), (name) -> new node(name, wordWeight.getOrDefault(name,1) ,false)));
         linkSourcesList = new LinkedList<>();
@@ -167,6 +169,15 @@ public class WordGraph {
 //        });
 //        fullGraph = graph("Word Diagram").directed().with( linkSourcesList.toArray(new LinkSource[linkSourcesList.size()]));
 //        graphNodeList.get(0).with(Style.SOLID,guru.nidi.graphviz.attribute.Color.RED);
+    }
+
+    private static boolean hasObejct(Object[] objects, int start, int end, Object o){
+        for (int i = start; i < end; i++) {
+            if (objects[i].equals(o)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static String getDotPath() {
@@ -397,6 +408,20 @@ public class WordGraph {
         }
     }
 
+    private void DFS(Map<Integer, List<Integer>> co,List<Integer> buf,List<List<Integer>> res,Integer start, Integer end){
+        if(co.get(end).contains(start)) { // 有问题，不能正常退出
+            buf.add(buf.size(),end);
+            res.add(new LinkedList<>(buf));
+        }
+        else {
+            for(Integer nextPoint :co.get(start) ){
+                buf.add(0,nextPoint);
+                DFS(co,buf,res,start,end);
+                buf.remove(0);
+            }
+        }
+    }
+
     public Integer[] shortestPath(String a, String b, List<File> fileList)throws dotPathException{
         // 得到集合
         // Occurrence Table
@@ -407,51 +432,99 @@ public class WordGraph {
         int end = getIndex(b);
         // 注意 这里没有end > start，因为start和end可能重复多次
         if(start >= 0 && end >= 0){
-            LinkedList<Integer> startOccurrence = new LinkedList<>();
-            LinkedList<Integer> endOccurrence = new LinkedList<>();
-            for(Integer i = 0;i < stringArray.length;i++){
-                if(stringArray[i].equals(a))
-                    startOccurrence.add(i);
-                if(stringArray[i].equals(b))
-                    endOccurrence.add(i);
-            }
-            LinkedList<Integer> startIndex = new LinkedList<>();
+//            LinkedList<Integer> startOccurrence = new LinkedList<>();
+//            LinkedList<Integer> endOccurrence = new LinkedList<>();
+//            for(Integer i = 0;i < stringArray.length;i++){
+//                if(stringArray[i].equals(a))
+//                    startOccurrence.add(i);
+//                if(stringArray[i].equals(b))
+//                    endOccurrence.add(i);
+//            }
+//            LinkedList<Integer> startIndex = new LinkedList<>();
+//
+//            int distance = WordGraph.UNREACHABLE; // Refactor to maxInteger.
+//            for(Integer i:startOccurrence)
+//                for(Integer j:endOccurrence)
+//                    // 起始超过了结束
+//                    if(j < i)
+//                        continue;
+//                    else if(j - i < distance && j > i){
+//                        startIndex.clear();
+//                        distance = j - i;
+//                        startIndex.add(i);
+//                    }else if(j - i == distance){
+//                        startIndex.add(i);
+//                    }
 
-            int distance = WordGraph.UNREACHABLE; // Refactor to maxInteger.
-            for(Integer i:startOccurrence)
-                for(Integer j:endOccurrence)
-                    // 起始超过了结束
-                    if(j < i)
-                        continue;
-                    else if(j - i < distance && j > i){
-                        startIndex.clear();
-                        distance = j - i;
-                        startIndex.add(i);
-                    }else if(j - i == distance){
-                        startIndex.add(i);
+            // New Version without known bugs
+            Map<Integer, List<Integer>> map = new HashMap<>();
+            int[] wordDistance = new int[nodeCount];
+            Arrays.fill(wordDistance,WordGraph.UNREACHABLE);
+            LinkedList<Integer> stack = new LinkedList<>();
+            stack.push(start);
+            int nowDistance = 0;
+            wordDistance[start] = nowDistance;
+            while(map.get(end) == null){
+                boolean added = false;
+                nowDistance++;
+                Set<Integer> keySet = new HashSet<>(map.keySet());
+                for(Integer i:stack){
+                    // From i to j
+                    for (int j = 1; j <= nextWord[i][0]; j++) {
+                        if(!keySet.contains(nextWord[i][j])){
+                            List<Integer> linkedList = map.getOrDefault(i,new LinkedList<>());
+                            // 列表中保存的是所有的前一个元素
+                            linkedList.add(i);
+                            added = true;
+                            wordDistance[nextWord[i][j]]=nowDistance;
+                            map.put(nextWord[i][j],linkedList);
+                        }
                     }
-            if(fileList == null){
-                        return startIndex.toArray(new Integer[startIndex.size()]);
+                }
+                stack.clear();
+                Set<Integer> newSet = map.keySet();
+                newSet.removeAll(keySet);
+                stack.addAll(newSet);
+                // 遍历完毕
+                if(!added)
+                    break;
             }
-            for(int in = 0;in < startIndex.size();in++) {
-                Integer sI = startIndex.get(in);
-                Arrays.fill(nodeIsMarked, false);
-                for (int i = 0; i < distance + 1; i++) {
-                    nodeIsMarked[getIndex(stringArray[i + sI])] = true;
-                }
-                for (int i = 0; i < edgeIsMarked.length; i++) {
-                    for (int j = 0; j < edgeIsMarked[0].length; j++) {
-                        edgeIsMarked[i][j] = false;
-                    }
-                }
-                for (int i = 0; i < distance; i++) {
-                    edgeIsMarked[getIndex(stringArray[sI + i])][getIndex(stringArray[sI + i + 1])] = true;
+            List<List<Integer>> results = new ArrayList<>();
+            DFS(map,new LinkedList<Integer>(),results,start,end);
+
+//            if(fileList == null){
+//                        return startIndex.toArray(new Integer[startIndex.size()]);
+//            }
+
+//            for(int in = 0;in < startIndex.size();in++) {
+//                Integer sI = startIndex.get(in);
+//                Arrays.fill(nodeIsMarked, false);
+//                for (int i = 0; i < distance + 1; i++) {
+//                    nodeIsMarked[getIndex(stringArray[i + sI])] = true;
+//                }
+//                for (int i = 0; i < edgeIsMarked.length; i++) {
+//                    for (int j = 0; j < edgeIsMarked[0].length; j++) {
+//                        edgeIsMarked[i][j] = false;
+//                    }
+//                }
+//                for (int i = 0; i < distance; i++) {
+//                    edgeIsMarked[getIndex(stringArray[sI + i])][getIndex(stringArray[sI + i + 1])] = true;
+//                }
+//                redraw();
+//                fileList.add(this.exportSVGFile());
+//            }
+
+            for(List<Integer> route : results){
+                this.cleanMark();
+                for(Integer i:route)
+                    nodeIsMarked[i] = true;
+                for(int i = 0; i < route.size()-1;i++){
+                    edgeIsMarked[route.get(i)][route.get(i+1)] = true;
                 }
                 redraw();
                 fileList.add(this.exportSVGFile());
             }
-            startIndex.add(0, distance);
-            return startIndex.toArray(new Integer[startIndex.size()]);
+            return null; // 在Libtest.java 不可用
         }
         return null;
     }
