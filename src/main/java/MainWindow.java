@@ -166,8 +166,10 @@ public class MainWindow {
                     if(res == null || res == WordGraph.UNREACHABLE){
                         JOptionPane.showMessageDialog(mainPanel, "未找到最短路径。", "警告", JOptionPane.WARNING_MESSAGE);
                     }else{
-                        if(fileList.size() == 1)
+                        if(fileList.size() == 1) {
+                            JOptionPane.showMessageDialog(mainPanel, String.format("最短路径长度为%d.", res), "查找到最短路径", JOptionPane.INFORMATION_MESSAGE);
                             svgPanel.setURI(fileList.get(0).toURI().toString());
+                        }
                         else{
                             int reply = JOptionPane.showConfirmDialog(mainPanel, String.format("查找到%d条最短路径，路径长度为%d，是否查看所有最短路径？", fileList.size(),res),"查找到多条最短路径",JOptionPane.YES_NO_OPTION);
                             if(reply == JOptionPane.YES_OPTION){

@@ -105,7 +105,6 @@ public class WordGraph {
     private int nodeCount;
     private Map<String, Integer> wordWeight;
     private ArrayList<String> nodeList;
-    private BufferedImage fullPic = null;
     private LinkedList<LinkSource> linkSourcesList;
     private static String dotPath;
     private Map<String, node> graphNodeList;
@@ -118,7 +117,7 @@ public class WordGraph {
     public WordGraph(String s){
         // Preprocessor
         sourceString = s.replaceAll("[^A-Za-z\\s]","").toLowerCase();
-        stringArray = sourceString.split("\\s");
+        stringArray = sourceString.split("\\s+");
         HashSet<String> nodeSet = new HashSet<>();
         Collections.addAll(nodeSet,stringArray);
         nodeCount = nodeSet.size();

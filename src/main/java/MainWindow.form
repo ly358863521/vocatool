@@ -23,7 +23,10 @@
               <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
               <gridbag weightx="3.0" weighty="9.0"/>
             </constraints>
-            <properties/>
+            <properties>
+              <minimumSize width="300" height="900"/>
+              <preferredSize width="300" height="900"/>
+            </properties>
             <border type="none"/>
             <children>
               <grid id="e3f79" binding="inputFile" layout-manager="GridBagLayout">
@@ -385,10 +388,11 @@
           <grid id="4f25e" binding="imagePanel" layout-manager="GridBagLayout">
             <constraints>
               <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
-              <gridbag weightx="5.0" weighty="9.0" ipadx="1" ipady="1"/>
+              <gridbag weightx="6.0" weighty="9.0" ipadx="1" ipady="1"/>
             </constraints>
             <properties>
-              <preferredSize width="240" height="80"/>
+              <opaque value="true"/>
+              <preferredSize width="600" height="900"/>
             </properties>
             <border type="none"/>
             <children>
