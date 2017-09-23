@@ -13,6 +13,7 @@ import java.io.*;
 import java.util.*;
 import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 /**
@@ -337,40 +338,125 @@ public class WordGraph {
     }
 
     public String[] allShortestPath(String begin, Map<String,File> svgFile) throws dotPathException{
-        int i = 0;
-        for (; i < stringArray.length; i++) {
-            if(stringArray[i].equals(begin))
-                break;
-        }
-        HashSet<String> endpointSet = new HashSet<>();
-        LinkedList<String[]> routes = new LinkedList<>();
-        ArrayList<String> endpoint = new ArrayList<>();
-        routes.clear();
-        for(int j = i+1;j < stringArray.length;j++){
-            if(stringArray[j].equals(begin)) {
-                i = j;
-                continue;
+//        int i = 0;
+//        for (; i < stringArray.length; i++) {
+//            if(stringArray[i].equals(begin))
+//                break;
+//        }
+//        HashSet<String> endpointSet = new HashSet<>();
+//        LinkedList<String[]> routes = new LinkedList<>();
+//        ArrayList<String> endpoint = new ArrayList<>();
+//        routes.clear();
+//        for(int j = i+1;j < stringArray.length;j++){
+//            if(stringArray[j].equals(begin)) {
+//                i = j;
+//                continue;
+//            }
+//            if(!endpointSet.contains(stringArray[j])){
+//                routes.add(Arrays.copyOfRange(stringArray,i,j+1));
+//                endpointSet.add(stringArray[j]);
+//                endpoint.add(stringArray[j]);
+//            }
+//        }
+//        // 画出路线图
+//        for(String[] strings : routes){
+//            System.out.println(String.join("->", strings));
+//            this.cleanMark();
+//            for (int j = 0; j < strings.length - 1; j++) {
+//                // Use marked array
+//                this.nodeIsMarked[getIndex(strings[j])]=true;
+//                this.edgeIsMarked[getIndex(strings[j])][getIndex(strings[j+1])]=true;
+//            }
+//            this.nodeIsMarked[getIndex(strings[strings.length-1])]=true;
+//            redraw();
+//            svgFile.put(strings[strings.length-1],exportSVGFile());
+//        }
+//        return endpoint.toArray(new String[endpoint.size()]);
+        int start = getIndex(begin);
+        if(start >= 0) {
+//            LinkedList<Integer> startOccurrence = new LinkedList<>();
+//            LinkedList<Integer> endOccurrence = new LinkedList<>();
+//            for(Integer i = 0;i < stringArray.length;i++){
+//                if(stringArray[i].equals(a))
+//                    startOccurrence.add(i);
+//                if(stringArray[i].equals(b))
+//                    endOccurrence.add(i);
+//            }
+//            LinkedList<Integer> startIndex = new LinkedList<>();
+//
+//            int distance = WordGraph.UNREACHABLE; // Refactor to maxInteger.
+//            for(Integer i:startOccurrence)
+//                for(Integer j:endOccurrence)
+//                    // 起始超过了结束
+//                    if(j < i)
+//                        continue;
+//                    else if(j - i < distance && j > i){
+//                        startIndex.clear();
+//                        distance = j - i;
+//                        startIndex.add(i);
+//                    }else if(j - i == distance){
+//                        startIndex.add(i);
+//                    }
+
+            // New Version without known bugs
+            Map<Integer, List<Integer>> map = new HashMap<>();
+            int[] wordDistance = new int[nodeCount]; // 保存从某一点出发时，两点最短距离
+            Arrays.fill(wordDistance, WordGraph.UNREACHABLE);
+            LinkedList<Integer> stack = new LinkedList<>();
+            stack.push(start);
+            int nowDistance = 0;
+            wordDistance[start] = nowDistance;
+            while (true) { // 渐进遍历未遍历到终点
+                boolean added = false;
+                nowDistance++; // 遍历深度
+                Set<Integer> keySet = new HashSet<>(map.keySet()); // 在现在这一层深度有的节点
+                for (Integer i : stack) {
+                    // From i to j
+                    for (int j = 1; j <= nextWord[i][0]; j++) {
+                        if (!keySet.contains(nextWord[i][j]) && wordDistance[nextWord[i][j]] >= nowDistance) { // 判断是否是下一层的节点:是否出现在前几层
+                            List<Integer> linkedList = map.getOrDefault(nextWord[i][j], new LinkedList<>());
+                            // 列表中保存的是所有的前一个元素
+                            linkedList.add(i);
+                            added = true;
+                            wordDistance[nextWord[i][j]] = nowDistance; // 记录下距离
+                            map.put(nextWord[i][j], linkedList);
+                        }
+                    }
+                }
+                stack.clear();
+                Set<Integer> newSet = new HashSet<>(map.keySet());
+                newSet.removeAll(keySet);
+                stack.addAll(newSet);
+                // 遍历完毕
+                if (!added)
+                    break; // 不可达
             }
-            if(!endpointSet.contains(stringArray[j])){
-                routes.add(Arrays.copyOfRange(stringArray,i,j+1));
-                endpointSet.add(stringArray[j]);
-                endpoint.add(stringArray[j]);
+            for (Integer end : map.keySet()) {
+                List<List<Integer>> results = new ArrayList<>();
+                DFS(map, new LinkedList<>(), results, start, end);
+
+                for (int routeNumber = 0; routeNumber < results.size(); routeNumber++) {
+                    List<Integer> route = results.get(routeNumber);
+                    this.cleanMark();
+                    for (Integer i : route)
+                        nodeIsMarked[i] = true;
+                    for (int i = 0; i < route.size() - 1; i++) {
+                        edgeIsMarked[route.get(i)][route.get(i + 1)] = true;
+                    }
+                    redraw();
+                    svgFile.put(String.format("%s_%d", wordArray[end], routeNumber+1), this.exportSVGFile());
+                }
             }
+//            return map.keySet().stream().map(new Function<Integer, String>() {
+//                @Override
+//                public String apply(Integer integer) {
+//                    return wordArray[integer];
+//                }
+//            }).collect(Collectors.toList()).toArray(new String[map.keySet().size()]);
+//            return map.keySet().stream().map(i->wordArray[i]).collect(Collectors.toList()).toArray(new String[map.size()]);
+            return svgFile.keySet().toArray(new String[map.size()]);
         }
-        // 画出路线图
-        for(String[] strings : routes){
-            System.out.println(String.join("->", strings));
-            this.cleanMark();
-            for (int j = 0; j < strings.length - 1; j++) {
-                // Use marked array
-                this.nodeIsMarked[getIndex(strings[j])]=true;
-                this.edgeIsMarked[getIndex(strings[j])][getIndex(strings[j+1])]=true;
-            }
-            this.nodeIsMarked[getIndex(strings[strings.length-1])]=true;
-            redraw();
-            svgFile.put(strings[strings.length-1],exportSVGFile());
-        }
-        return endpoint.toArray(new String[endpoint.size()]);
+        return null;
     }
 
     // Redraw with colored edge and node.
