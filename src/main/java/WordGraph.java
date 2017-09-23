@@ -296,27 +296,35 @@ public class WordGraph {
         pngTranscoder.transcode(input,output);
     }
 
-    public String[] bridgeWord(String a, String b) throws ArrayIndexOutOfBoundsException{
-        this.linkSourcesList.stream().forEach((LinkSource l) ->{l.setColor(false);});
-        this.graphNodeList.values().stream().forEach(node -> {node.setColor(false);});
-        HashSet<Integer> aConnection = new HashSet<>();
-        HashSet<Integer> bConnection = new HashSet<>();
-        Collections.addAll(aConnection, Arrays.copyOfRange(nextWord[getIndex(a)], 1, nextWord[getIndex(a)][0] + 1));
-        Collections.addAll(bConnection, Arrays.copyOfRange(prevWord[getIndex(b)], 1, prevWord[getIndex(b)][0] + 1));
-        aConnection.retainAll(bConnection);
-        String[] result = new String[aConnection.size()];
-        Integer[] indexArray = aConnection.toArray(new Integer[aConnection.size()]);
-        for(int i = 0;i < aConnection.size();i++){
-            graphNodeList.get(result[i] = wordArray[indexArray[i]]).setColor(true);
-        }
-        // Color
-        Arrays.fill(nodeIsMarked,false);
-        for(Integer i:indexArray){
-            nodeIsMarked[i] = true;
-        }
-        // Redraw Graph
+    public String[] bridgeWord(String a, String b){
+        try {
+            this.linkSourcesList.stream().forEach((LinkSource l) -> {
+                l.setColor(false);
+            });
+            this.graphNodeList.values().stream().forEach(node -> {
+                node.setColor(false);
+            });
+            HashSet<Integer> aConnection = new HashSet<>();
+            HashSet<Integer> bConnection = new HashSet<>();
+            Collections.addAll(aConnection, Arrays.copyOfRange(nextWord[getIndex(a)], 1, nextWord[getIndex(a)][0] + 1));
+            Collections.addAll(bConnection, Arrays.copyOfRange(prevWord[getIndex(b)], 1, prevWord[getIndex(b)][0] + 1));
+            aConnection.retainAll(bConnection);
+            String[] result = new String[aConnection.size()];
+            Integer[] indexArray = aConnection.toArray(new Integer[aConnection.size()]);
+            for (int i = 0; i < aConnection.size(); i++) {
+                graphNodeList.get(result[i] = wordArray[indexArray[i]]).setColor(true);
+            }
+            // Color
+            Arrays.fill(nodeIsMarked, false);
+            for (Integer i : indexArray) {
+                nodeIsMarked[i] = true;
+            }
+            // Redraw Graph
 //        redraw();
-        return result;
+            return result;
+        }catch (ArrayIndexOutOfBoundsException a0){
+            return new String[0];
+        }
     }
 
     public File randomPath(LinkedList<String> path)throws dotPathException{
@@ -410,19 +418,22 @@ public class WordGraph {
 
     private void DFS(Map<Integer, List<Integer>> co,List<Integer> buf,List<List<Integer>> res,Integer start, Integer end){
         if(co.get(end).contains(start)) { // 有问题，不能正常退出
-            buf.add(buf.size(),end);
+            buf.add(0,start);
             res.add(new LinkedList<>(buf));
+            buf.remove(0); // Clean the stack
         }
         else {
-            for(Integer nextPoint :co.get(start) ){
-                buf.add(0,nextPoint);
-                DFS(co,buf,res,start,end);
+            if(buf.isEmpty())
+                buf.add(end);
+            for(Integer prevPoint :co.get(end) ){
+                buf.add(0,prevPoint);
+                DFS(co,buf,res,start,prevPoint);
                 buf.remove(0);
             }
         }
     }
 
-    public Integer[] shortestPath(String a, String b, List<File> fileList)throws dotPathException{
+    public Integer shortestPath(String a, String b, List<File> fileList)throws dotPathException{
         // 得到集合
         // Occurrence Table
         // 返回最小距离，开始位置
@@ -458,36 +469,36 @@ public class WordGraph {
 
             // New Version without known bugs
             Map<Integer, List<Integer>> map = new HashMap<>();
-            int[] wordDistance = new int[nodeCount];
+            int[] wordDistance = new int[nodeCount]; // 保存从某一点出发时，两点最短距离
             Arrays.fill(wordDistance,WordGraph.UNREACHABLE);
             LinkedList<Integer> stack = new LinkedList<>();
             stack.push(start);
             int nowDistance = 0;
             wordDistance[start] = nowDistance;
-            while(map.get(end) == null){
+            while(map.get(end) == null){ // 渐进遍历未遍历到终点
                 boolean added = false;
-                nowDistance++;
-                Set<Integer> keySet = new HashSet<>(map.keySet());
+                nowDistance++; // 遍历深度
+                Set<Integer> keySet = new HashSet<>(map.keySet()); // 在现在这一层深度有的节点
                 for(Integer i:stack){
                     // From i to j
                     for (int j = 1; j <= nextWord[i][0]; j++) {
-                        if(!keySet.contains(nextWord[i][j])){
-                            List<Integer> linkedList = map.getOrDefault(i,new LinkedList<>());
+                        if(!keySet.contains(nextWord[i][j]) && wordDistance[nextWord[i][j]] >= nowDistance){ // 判断是否是下一层的节点:是否出现在前几层
+                            List<Integer> linkedList = map.getOrDefault(nextWord[i][j],new LinkedList<>());
                             // 列表中保存的是所有的前一个元素
                             linkedList.add(i);
                             added = true;
-                            wordDistance[nextWord[i][j]]=nowDistance;
+                            wordDistance[nextWord[i][j]]=nowDistance; // 记录下距离
                             map.put(nextWord[i][j],linkedList);
                         }
                     }
                 }
                 stack.clear();
-                Set<Integer> newSet = map.keySet();
+                Set<Integer> newSet = new HashSet<>(map.keySet());
                 newSet.removeAll(keySet);
                 stack.addAll(newSet);
                 // 遍历完毕
                 if(!added)
-                    break;
+                    break; // 不可达
             }
             List<List<Integer>> results = new ArrayList<>();
             DFS(map,new LinkedList<Integer>(),results,start,end);
@@ -524,7 +535,7 @@ public class WordGraph {
                 redraw();
                 fileList.add(this.exportSVGFile());
             }
-            return null; // 在Libtest.java 不可用
+            return wordDistance[end]; // 在libtest.java 不可用
         }
         return null;
     }
@@ -595,21 +606,21 @@ public class WordGraph {
         }
     }
 
-    public String calcShortestPath(String word1, String word2){
-        try {
-           Integer[] integers = shortestPath(word1, word2, null);
-           Integer distance = integers[0];
-           Integer start = integers[1];
-           LinkedList<String> stringList = new LinkedList<>();
-           for(int i = 0;i <= distance; i++){
-               stringList.add(wordArray[i+start]);
-           }
-           return String.join("->",stringList);
-        }catch (dotPathException e){
-            // 并不会有这个
-        }
-        return "Error!";
-    }
+//    public String calcShortestPath(String word1, String word2){
+//        try {
+//           Integer[] integers = shortestPath(word1, word2, null);
+//           Integer distance = integers[0];
+//           Integer start = integers[1];
+//           LinkedList<String> stringList = new LinkedList<>();
+//           for(int i = 0;i <= distance; i++){
+//               stringList.add(wordArray[i+start]);
+//           }
+//           return String.join("->",stringList);
+//        }catch (dotPathException e){
+//            // 并不会有这个
+//        }
+//        return "Error!";
+//    }
 
     private void cleanMark(){
         this.linkSourcesList.stream().forEach((LinkSource l) ->{l.setColor(false);});

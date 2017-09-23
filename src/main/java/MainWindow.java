@@ -162,14 +162,14 @@ public class MainWindow {
             public void actionPerformed(ActionEvent e) {
                 ArrayList<File> fileList = new ArrayList<>();
                 try {
-                    Integer[] res = wordGraph.shortestPath(textField2.getText().toLowerCase(), textField3.getText().toLowerCase(), fileList);
-                    if(res == null || res[0] == WordGraph.UNREACHABLE){
+                    Integer res = wordGraph.shortestPath(textField2.getText().toLowerCase(), textField3.getText().toLowerCase(), fileList);
+                    if(res == null || res == WordGraph.UNREACHABLE){
                         JOptionPane.showMessageDialog(mainPanel, "未找到最短路径。", "警告", JOptionPane.WARNING_MESSAGE);
                     }else{
-                        if(res.length == 2)
+                        if(fileList.size() == 1)
                             svgPanel.setURI(fileList.get(0).toURI().toString());
                         else{
-                            int reply = JOptionPane.showConfirmDialog(mainPanel, String.format("查找到%d条最短路径，路径长度为%d，是否查看所有最短路径？", res.length-1,res[0]),"查找到多条最短路径",JOptionPane.YES_NO_OPTION);
+                            int reply = JOptionPane.showConfirmDialog(mainPanel, String.format("查找到%d条最短路径，路径长度为%d，是否查看所有最短路径？", fileList.size(),res),"查找到多条最短路径",JOptionPane.YES_NO_OPTION);
                             if(reply == JOptionPane.YES_OPTION){
                                 ArrayList<JRadioButton> radioButtonList = new ArrayList<>();
                                 JPanel boxPanel = new JPanel();
