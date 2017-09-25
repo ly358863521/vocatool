@@ -7,11 +7,7 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.IOException;
-import java.rmi.ConnectException;
-import java.rmi.server.ExportException;
 import java.util.*;
 
 public class libtest {
@@ -42,7 +38,7 @@ public class libtest {
         catch (dotPathException d){
             d.printStackTrace();
         };
-        BufferedImage bufferedImage = wordGraph.exportFullImage();
+        BufferedImage bufferedImage = null;
         System.out.println(wordGraph.dotGenerate().getAbsolutePath());
         JFrame jFrame = new JFrame();
         jFrame.add(new JPanel(){

@@ -1,27 +1,21 @@
-import com.sun.deploy.xml.XMLParser;
-import jnr.ffi.annotations.In;
 import org.apache.batik.transcoder.TranscoderException;
 import org.apache.batik.transcoder.TranscoderInput;
 import org.apache.batik.transcoder.TranscoderOutput;
 import org.apache.batik.transcoder.image.PNGTranscoder;
-import sun.awt.image.ImageWatched;
 
-
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.*;
-import java.util.List;
 import java.util.function.Function;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 /**
  *
  */
+// dot路径未找到
 class dotPathException extends Exception{}
-class UnreachableNode extends Exception{}
 
+// 边类
 class LinkSource{
     private String start;
     private String end;
@@ -54,6 +48,9 @@ class LinkSource{
     }
 }
 
+/**
+ * 节点类
+ */
 class node{
     String name;
     int weight;
@@ -160,15 +157,6 @@ public class WordGraph {
                 }
             }
         }
-//        graphNodeList.sort((Node a, Node b) -> {
-//            if(wordWeight[graphNodeList.indexOf(a)] > wordWeight[graphNodeList.indexOf(b)]){
-//                return 1;
-//            }else if(wordWeight[graphNodeList.indexOf(a)] == wordWeight[graphNodeList.indexOf(b)]){
-//                return 0;
-//            }else return -1;
-//        });
-//        fullGraph = graph("Word Diagram").directed().with( linkSourcesList.toArray(new LinkSource[linkSourcesList.size()]));
-//        graphNodeList.get(0).with(Style.SOLID,guru.nidi.graphviz.attribute.Color.RED);
     }
 
     private static boolean hasObejct(Object[] objects, int start, int end, Object o){
@@ -180,22 +168,37 @@ public class WordGraph {
         return false;
     }
 
+    /**
+     * 获得当前全局dot路径
+     * @return dot路径
+     */
     public static String getDotPath() {
         return WordGraph.dotPath;
     }
 
+    /**
+     * 设置当前全局dot路径
+     * @param dotPath dot路径
+     */
     public static void setDotPath(String dotPath) {
         WordGraph.dotPath = dotPath;
     }
 
+    /**
+     * 获得某一个词在图中的编号
+     * @param word 词
+     * @return 编号
+     * @apiNote 若编号为负数，说明这个词不在图中
+     */
     private int getIndex(String word){
         return Arrays.binarySearch(wordArray,word,String::compareToIgnoreCase);
     }
 
-    public BufferedImage exportFullImage(){
-        return null;
-    }
 
+    /**
+     * 根据当前图的信息导出dot文件到一个临时文件中
+     * @return 临时文件File对象
+     */
     public File dotGenerate(){
         try {
             File dotFile = File.createTempFile("graphviz_dot", ".dot");
@@ -221,6 +224,13 @@ public class WordGraph {
         }
     }
     private static String testString = null;
+
+    /**
+     * 测试dot程序是否可用
+     * @return 测试命令返回值
+     * @throws IOException 无法访问指定目录
+     * @throws dotPathException dot程序无响应或者响应不符合预期
+     */
     public static String testDotPath() throws IOException,dotPathException{
         Thread testThread = new Thread(() -> {
             try {
@@ -254,6 +264,11 @@ public class WordGraph {
         return testString;
     }
 
+    /**
+     * 导出svg文件到临时目录
+     * @return 临时目录中的File对象
+     * @throws dotPathException dot程序无响应
+     */
     public File exportSVGFile() throws dotPathException {
         try{
             if(!WordGraph.dotAvailable)
@@ -289,6 +304,13 @@ public class WordGraph {
         }
     }
 
+    /**
+     * 导出png对象
+     * @param file 可以写入的File对象
+     * @throws dotPathException dot程序无响应
+     * @throws FileNotFoundException 目标png无法写入
+     * @throws TranscoderException 转码器错误
+     */
     public void exportPNG(File file) throws dotPathException,FileNotFoundException,TranscoderException{
         PNGTranscoder pngTranscoder = new PNGTranscoder();
         TranscoderInput input = new TranscoderInput(new FileInputStream(this.exportSVGFile()));
@@ -296,6 +318,14 @@ public class WordGraph {
         pngTranscoder.transcode(input,output);
     }
 
+    /**
+     * 查找桥接词
+     * @param a 起点
+     * @param b 终点
+     * @return 词组表
+     * @apiNote 若没有桥接词，返回空数组
+     * @apiNote 若a和b不在图中，返回null
+     */
     public String[] bridgeWord(String a, String b){
         try {
             this.linkSourcesList.stream().forEach((LinkSource l) -> {
@@ -327,6 +357,12 @@ public class WordGraph {
         }
     }
 
+    /**
+     * 随机游走
+     * @param path 路线图
+     * @return 染色后的File对象
+     * @throws dotPathException dot程序配置错误
+     */
     public File randomPath(LinkedList<String> path)throws dotPathException{
         // Unfinished function
         this.linkSourcesList.stream().forEach((LinkSource l) ->{l.setColor(false);});
@@ -336,68 +372,16 @@ public class WordGraph {
         return exportSVGFile();
     }
 
+    /**
+     * 单源最短路径函数
+     * @param begin 起点
+     * @param svgFile 最短路径图
+     * @return 可达词列表
+     * @throws dotPathException dot配置错误
+     */
     public String[] allShortestPath(String begin, Map<String,File> svgFile) throws dotPathException{
-//        int i = 0;
-//        for (; i < stringArray.length; i++) {
-//            if(stringArray[i].equals(begin))
-//                break;
-//        }
-//        HashSet<String> endpointSet = new HashSet<>();
-//        LinkedList<String[]> routes = new LinkedList<>();
-//        ArrayList<String> endpoint = new ArrayList<>();
-//        routes.clear();
-//        for(int j = i+1;j < stringArray.length;j++){
-//            if(stringArray[j].equals(begin)) {
-//                i = j;
-//                continue;
-//            }
-//            if(!endpointSet.contains(stringArray[j])){
-//                routes.add(Arrays.copyOfRange(stringArray,i,j+1));
-//                endpointSet.add(stringArray[j]);
-//                endpoint.add(stringArray[j]);
-//            }
-//        }
-//        // 画出路线图
-//        for(String[] strings : routes){
-//            System.out.println(String.join("->", strings));
-//            this.cleanMark();
-//            for (int j = 0; j < strings.length - 1; j++) {
-//                // Use marked array
-//                this.nodeIsMarked[getIndex(strings[j])]=true;
-//                this.edgeIsMarked[getIndex(strings[j])][getIndex(strings[j+1])]=true;
-//            }
-//            this.nodeIsMarked[getIndex(strings[strings.length-1])]=true;
-//            redraw();
-//            svgFile.put(strings[strings.length-1],exportSVGFile());
-//        }
-//        return endpoint.toArray(new String[endpoint.size()]);
         int start = getIndex(begin);
         if(start >= 0) {
-//            LinkedList<Integer> startOccurrence = new LinkedList<>();
-//            LinkedList<Integer> endOccurrence = new LinkedList<>();
-//            for(Integer i = 0;i < stringArray.length;i++){
-//                if(stringArray[i].equals(a))
-//                    startOccurrence.add(i);
-//                if(stringArray[i].equals(b))
-//                    endOccurrence.add(i);
-//            }
-//            LinkedList<Integer> startIndex = new LinkedList<>();
-//
-//            int distance = WordGraph.UNREACHABLE; // Refactor to maxInteger.
-//            for(Integer i:startOccurrence)
-//                for(Integer j:endOccurrence)
-//                    // 起始超过了结束
-//                    if(j < i)
-//                        continue;
-//                    else if(j - i < distance && j > i){
-//                        startIndex.clear();
-//                        distance = j - i;
-//                        startIndex.add(i);
-//                    }else if(j - i == distance){
-//                        startIndex.add(i);
-//                    }
-
-            // New Version without known bugs
             Map<Integer, List<Integer>> map = new HashMap<>();
             int[] wordDistance = new int[nodeCount]; // 保存从某一点出发时，两点最短距离
             Arrays.fill(wordDistance, WordGraph.UNREACHABLE);
@@ -407,16 +391,16 @@ public class WordGraph {
             wordDistance[start] = nowDistance;
             while (true) { // 渐进遍历未遍历到终点
                 boolean added = false;
-                nowDistance++; // 遍历深度
                 Set<Integer> keySet = new HashSet<>(map.keySet()); // 在现在这一层深度有的节点
+                nowDistance++; // 遍历深度
                 for (Integer i : stack) {
                     // From i to j
                     for (int j = 1; j <= nextWord[i][0]; j++) {
                         if (!keySet.contains(nextWord[i][j]) && wordDistance[nextWord[i][j]] >= nowDistance) { // 判断是否是下一层的节点:是否出现在前几层
                             List<Integer> linkedList = map.getOrDefault(nextWord[i][j], new LinkedList<>());
                             // 列表中保存的是所有的前一个元素
-                            linkedList.add(i);
                             added = true;
+                            linkedList.add(i);
                             wordDistance[nextWord[i][j]] = nowDistance; // 记录下距离
                             map.put(nextWord[i][j], linkedList);
                         }
@@ -437,6 +421,7 @@ public class WordGraph {
                 for (int routeNumber = 0; routeNumber < results.size(); routeNumber++) {
                     List<Integer> route = results.get(routeNumber);
                     this.cleanMark();
+                    this.linkSourcesList.clear();
                     for (Integer i : route)
                         nodeIsMarked[i] = true;
                     for (int i = 0; i < route.size() - 1; i++) {
@@ -446,44 +431,16 @@ public class WordGraph {
                     svgFile.put(String.format("%s_%d", wordArray[end], routeNumber+1), this.exportSVGFile());
                 }
             }
-//            return map.keySet().stream().map(new Function<Integer, String>() {
-//                @Override
-//                public String apply(Integer integer) {
-//                    return wordArray[integer];
-//                }
-//            }).collect(Collectors.toList()).toArray(new String[map.keySet().size()]);
-//            return map.keySet().stream().map(i->wordArray[i]).collect(Collectors.toList()).toArray(new String[map.size()]);
             return svgFile.keySet().toArray(new String[map.size()]);
         }
         return null;
     }
 
-    // Redraw with colored edge and node.
+    /**
+     * 重新根据nodeIsMarked和edgeIsMarked信息生成nodeList和edgeList
+     */
     public void redraw(){
-        // Node Creation
-//        List<node> graphNodeList = new LinkedList<>();
-//        for(int i =0; i< nodeList.size();i++){
-//            if(nodeIsMarked[i])
-//                graphNodeList.add(node(nodeList.get(i)).with(Style.FILLED,Color.hsv(0,0.62,1)).with("weight",wordWeight[getIndex(nodeList.get(i))])); // Watermelon Red
-//            else
-//                graphNodeList.add(node(nodeList.get(i)).with("weight",wordWeight[getIndex(nodeList.get(i))]));
-//        }
-//        graphNodeList.sort((Node a, Node b) -> {
-//            if(wordWeight[graphNodeList.indexOf(a)] > wordWeight[graphNodeList.indexOf(b)]){
-//                return 1;
-//            }else if(wordWeight[graphNodeList.indexOf(a)] == wordWeight[graphNodeList.indexOf(b)]){
-//                return 0;
-//            }else return -1;
-//        });
         this.linkSourcesList.clear();
-//        // Connecting
-//        for (int i = 0; i < stringArray.length - 1; i++) {
-//            // Possible Bug: Unconcurrent ID.
-//            int fromIndex = getIndex(stringArray[i]);
-//            int toIndex = getIndex(stringArray[i+1]);
-//            weightArray[fromIndex][toIndex] += 1;
-//            nextWord[fromIndex][++nextWord[fromIndex][0]] = toIndex;
-//        }
         for (int i = 0; i < wordArray.length; i++){
             for (int j = 0; j < wordArray.length;j++){
                 if(i != j && weightArray[i][j] != 0){
@@ -501,8 +458,18 @@ public class WordGraph {
         }
     }
 
+    /**
+     * 子图先深搜索函数
+     * @param co 子图邻接表
+     * @param buf 缓冲列表，递归用
+     * @param res 结果列表
+     * @param start 起点
+     * @param end 终点
+     */
     private void DFS(Map<Integer, List<Integer>> co,List<Integer> buf,List<List<Integer>> res,Integer start, Integer end){
         if(co.get(end).contains(start)) { // 有问题，不能正常退出
+            if(buf.isEmpty())
+                buf.add(end);
             buf.add(0,start);
             res.add(new LinkedList<>(buf));
             buf.remove(0); // Clean the stack
@@ -518,41 +485,25 @@ public class WordGraph {
         }
     }
 
+    /**
+     * 最短路径函数
+     * @param a 起点
+     * @param b 终点
+     * @param fileList svg文件列表，图片显示用
+     * @return 路径数量
+     * @throws dotPathException dot文件配置有误
+     */
     public Integer shortestPath(String a, String b, List<File> fileList)throws dotPathException{
         // 得到集合
         // Occurrence Table
         // 返回最小距离，开始位置
         this.linkSourcesList.stream().forEach((LinkSource l) ->{l.setColor(false);});
+        this.linkSourcesList.clear();
         this.graphNodeList.values().stream().forEach(node -> {node.setColor(false);});
         int start = getIndex(a);
         int end = getIndex(b);
         // 注意 这里没有end > start，因为start和end可能重复多次
         if(start >= 0 && end >= 0){
-//            LinkedList<Integer> startOccurrence = new LinkedList<>();
-//            LinkedList<Integer> endOccurrence = new LinkedList<>();
-//            for(Integer i = 0;i < stringArray.length;i++){
-//                if(stringArray[i].equals(a))
-//                    startOccurrence.add(i);
-//                if(stringArray[i].equals(b))
-//                    endOccurrence.add(i);
-//            }
-//            LinkedList<Integer> startIndex = new LinkedList<>();
-//
-//            int distance = WordGraph.UNREACHABLE; // Refactor to maxInteger.
-//            for(Integer i:startOccurrence)
-//                for(Integer j:endOccurrence)
-//                    // 起始超过了结束
-//                    if(j < i)
-//                        continue;
-//                    else if(j - i < distance && j > i){
-//                        startIndex.clear();
-//                        distance = j - i;
-//                        startIndex.add(i);
-//                    }else if(j - i == distance){
-//                        startIndex.add(i);
-//                    }
-
-            // New Version without known bugs
             Map<Integer, List<Integer>> map = new HashMap<>();
             int[] wordDistance = new int[nodeCount]; // 保存从某一点出发时，两点最短距离
             Arrays.fill(wordDistance,WordGraph.UNREACHABLE);
@@ -588,28 +539,6 @@ public class WordGraph {
             List<List<Integer>> results = new ArrayList<>();
             DFS(map,new LinkedList<Integer>(),results,start,end);
 
-//            if(fileList == null){
-//                        return startIndex.toArray(new Integer[startIndex.size()]);
-//            }
-
-//            for(int in = 0;in < startIndex.size();in++) {
-//                Integer sI = startIndex.get(in);
-//                Arrays.fill(nodeIsMarked, false);
-//                for (int i = 0; i < distance + 1; i++) {
-//                    nodeIsMarked[getIndex(stringArray[i + sI])] = true;
-//                }
-//                for (int i = 0; i < edgeIsMarked.length; i++) {
-//                    for (int j = 0; j < edgeIsMarked[0].length; j++) {
-//                        edgeIsMarked[i][j] = false;
-//                    }
-//                }
-//                for (int i = 0; i < distance; i++) {
-//                    edgeIsMarked[getIndex(stringArray[sI + i])][getIndex(stringArray[sI + i + 1])] = true;
-//                }
-//                redraw();
-//                fileList.add(this.exportSVGFile());
-//            }
-
             for(List<Integer> route : results){
                 this.cleanMark();
                 for(Integer i:route)
@@ -637,9 +566,11 @@ public class WordGraph {
         for (int i = 0; i < sentenceArray.length - 1; i++) {
             String[] bridge = bridgeWord(sentenceArray[i].toLowerCase().replaceAll("[^A-Za-z\\s]",""),
                     sentenceArray[i+1].toLowerCase().replaceAll("[^A-Za-z\\s]",""));
-            sb.append(sentenceArray[i]+" ");
+            sb.append(sentenceArray[i]);
+            sb.append(" ");
             if(bridge.length > 0){
-                sb.append(bridge[random.nextInt(bridge.length)]+" ");
+                sb.append(bridge[random.nextInt(bridge.length)]);
+                sb.append(" ");
             }
         }
         sb.append(sentenceArray[sentenceArray.length-1]);
@@ -647,6 +578,10 @@ public class WordGraph {
     }
 
 
+    /**
+     * 随机路径
+     * @param path 节点List
+     */
     private void randomList(List<String> path){
         Random random = new Random();
         int start = random.nextInt(nodeCount);
@@ -690,22 +625,6 @@ public class WordGraph {
             return "No word1 or word2 in the graph!";
         }
     }
-
-//    public String calcShortestPath(String word1, String word2){
-//        try {
-//           Integer[] integers = shortestPath(word1, word2, null);
-//           Integer distance = integers[0];
-//           Integer start = integers[1];
-//           LinkedList<String> stringList = new LinkedList<>();
-//           for(int i = 0;i <= distance; i++){
-//               stringList.add(wordArray[i+start]);
-//           }
-//           return String.join("->",stringList);
-//        }catch (dotPathException e){
-//            // 并不会有这个
-//        }
-//        return "Error!";
-//    }
 
     private void cleanMark(){
         this.linkSourcesList.stream().forEach((LinkSource l) ->{l.setColor(false);});

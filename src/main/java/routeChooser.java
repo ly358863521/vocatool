@@ -4,12 +4,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ContainerAdapter;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Map;
-import java.util.NoSuchElementException;
 
 public class routeChooser {
     public JPanel choosePanel;

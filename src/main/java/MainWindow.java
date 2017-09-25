@@ -1,26 +1,15 @@
-import com.sun.java.swing.plaf.windows.WindowsClassicLookAndFeel;
-import javafx.util.Pair;
+import org.apache.batik.swing.JSVGCanvas;
+import org.apache.batik.transcoder.TranscoderException;
+
 import javax.swing.*;
-import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
-import java.awt.event.*;
-import java.awt.image.BufferedImage;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.io.*;
 import java.util.*;
-
-import jdk.nashorn.internal.scripts.JO;
-import org.apache.batik.swing.JSVGCanvas;
-import org.apache.batik.swing.gvt.GVTTreeRendererAdapter;
-import org.apache.batik.swing.gvt.GVTTreeRendererEvent;
-import org.apache.batik.swing.svg.SVGDocumentLoaderAdapter;
-import org.apache.batik.swing.svg.SVGDocumentLoaderEvent;
-import org.apache.batik.swing.svg.GVTTreeBuilderAdapter;
-import org.apache.batik.swing.svg.GVTTreeBuilderEvent;
-import org.apache.batik.transcoder.TranscoderException;
-import org.apache.batik.transcoder.TranscoderInput;
-import org.apache.batik.transcoder.TranscoderOutput;
-import org.apache.batik.transcoder.image.PNGTranscoder;
 
 public class MainWindow {
     private JTabbedPane tabbedPane1;
@@ -36,7 +25,6 @@ public class MainWindow {
     private JButton allSP;
     private JTextArea textArea2;
     private JButton genNewText;
-    private JButton fullImage;
     private JButton exportButton;
     private JPanel mainPanel;
     private JPanel submainPanel;
@@ -79,6 +67,7 @@ public class MainWindow {
     private File chosenFile;
     private LinkedList<String> randomRoute;
     public MainWindow() {
+        // 导入按钮
         importFileChooseButton.addActionListener((ActionEvent e) -> {
                 JFileChooser jFileChooser = new JFileChooser();
                 jFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
@@ -95,6 +84,7 @@ public class MainWindow {
                     textField1.setText("");
                 }
             });
+        // 生成按钮
         generateButton.addActionListener((ActionEvent e) -> {
                 if(radioButton1.isSelected()) {
                     try {
@@ -141,6 +131,7 @@ public class MainWindow {
                 d0.printStackTrace();
             }
             });
+        // 自动选择
         textArea1.addFocusListener(new FocusAdapter() {
             @Override
             public void focusGained(FocusEvent e) {
@@ -157,6 +148,7 @@ public class MainWindow {
                 radioButton2.setSelected(false);
             }
         });
+        // 最短路径
         singleSP.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -220,6 +212,7 @@ public class MainWindow {
                 }
             }
         });
+        // 桥接词
         showBridgeButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -239,6 +232,7 @@ public class MainWindow {
                 }
             }
         });
+        // dot.exe 程序选择
         dotPathButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -267,6 +261,7 @@ public class MainWindow {
                 }
             }
         });
+        // 生成新文本
         genNewText.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -285,6 +280,7 @@ public class MainWindow {
                 textArea2.setText(sb.toString());
             }
         });
+        // 导出
         exportButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -302,7 +298,7 @@ public class MainWindow {
                     File file = jFileChooser.getSelectedFile();
                     switch(jFileChooser.getFileFilter().getDescription()){
                         case "PNG(.png)":wordGraph.exportPNG(file);break;
-                        case "SVG(.svg)":wordGraph.exportSVGFile().renameTo(file);break;
+                        case "SVG(.svg)":if(!wordGraph.exportSVGFile().renameTo(file)) throw new FileNotFoundException();;break;
                         default:System.out.println("No such option");
                     }
                 }catch(TranscoderException t){
@@ -314,6 +310,7 @@ public class MainWindow {
                 }
             }
         });
+        // 单源最短路径
         allSP.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -321,7 +318,7 @@ public class MainWindow {
                 try {
                     String endpoint[] = wordGraph.allShortestPath(textField2.getText(), fileMap);
                     ArrayList<JRadioButton> radioButtonList = new ArrayList<>();
-                    JPanel boxPanel = new JPanel();;
+                    JPanel boxPanel = new JPanel();
                     boxPanel.setMinimumSize(new Dimension(300,600));
                     boxPanel.setLayout(new BoxLayout(boxPanel,BoxLayout.Y_AXIS));
                     JSVGCanvas svgCanvas = new JSVGCanvas();
@@ -363,6 +360,7 @@ public class MainWindow {
                 }
             }
         });
+        // 随机游走
         randomBegin.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -377,6 +375,7 @@ public class MainWindow {
                 }
             }
         });
+        // 导出随机游走
         exportRoute.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {

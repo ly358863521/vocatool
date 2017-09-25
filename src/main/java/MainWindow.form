@@ -428,15 +428,6 @@
                     <properties/>
                     <border type="none"/>
                     <children>
-                      <component id="2ffb3" class="javax.swing.JButton" binding="fullImage">
-                        <constraints/>
-                        <properties>
-                          <text value="全图"/>
-                        </properties>
-                      </component>
-                      <hspacer id="f2b2f">
-                        <constraints/>
-                      </hspacer>
                       <component id="aa26c" class="javax.swing.JButton" binding="exportButton">
                         <constraints/>
                         <properties>
