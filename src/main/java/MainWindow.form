@@ -45,7 +45,7 @@
                     <properties/>
                     <border type="none"/>
                     <children>
-                      <grid id="9615f" binding="_inputPanel" layout-manager="BorderLayout" hgap="0" vgap="0">
+                      <grid id="9615f" binding="innerInputPanel" layout-manager="BorderLayout" hgap="0" vgap="0">
                         <constraints>
                           <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
                           <gridbag weightx="3.0" weighty="0.0"/>
@@ -95,7 +95,7 @@
                               <text value=""/>
                             </properties>
                           </component>
-                          <scrollpane id="cea1a" binding="text_s">
+                          <scrollpane id="cea1a" binding="textS">
                             <constraints border-constraint="Center"/>
                             <properties/>
                             <border type="none"/>
@@ -117,7 +117,7 @@
                       </grid>
                     </children>
                   </grid>
-                  <grid id="f3007" binding="ButtonPanel" layout-manager="GridBagLayout">
+                  <grid id="f3007" binding="buttonPanel" layout-manager="GridBagLayout">
                     <constraints>
                       <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
                       <gridbag weightx="3.0" weighty="1.0"/>
@@ -125,7 +125,7 @@
                     <properties/>
                     <border type="none"/>
                     <children>
-                      <grid id="b8c8" binding="ButtonGrid" layout-manager="FlowLayout" hgap="5" vgap="5" flow-align="2">
+                      <grid id="b8c8" binding="buttonGrid" layout-manager="FlowLayout" hgap="5" vgap="5" flow-align="2">
                         <constraints>
                           <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
                           <gridbag weightx="0.0" weighty="0.0"/>
@@ -280,7 +280,7 @@
                         <properties/>
                         <border type="none"/>
                         <children>
-                          <grid id="558a4" binding="SArea" layout-manager="BorderLayout" hgap="0" vgap="0">
+                          <grid id="558a4" binding="sArea" layout-manager="BorderLayout" hgap="0" vgap="0">
                             <constraints>
                               <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
                               <gridbag weightx="1.0" weighty="2.0"/>
@@ -288,7 +288,7 @@
                             <properties/>
                             <border type="none"/>
                             <children>
-                              <scrollpane id="31ea3" binding="SPanel_s">
+                              <scrollpane id="31ea3" binding="sPanelS">
                                 <constraints border-constraint="Center"/>
                                 <properties/>
                                 <border type="none"/>
@@ -305,7 +305,7 @@
                               </scrollpane>
                             </children>
                           </grid>
-                          <grid id="fabec" binding="SCommit" layout-manager="GridBagLayout">
+                          <grid id="fabec" binding="sCommit" layout-manager="GridBagLayout">
                             <constraints>
                               <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
                               <gridbag weightx="1.0" weighty="1.0"/>
@@ -420,7 +420,7 @@
                 <properties/>
                 <border type="none"/>
                 <children>
-                  <grid id="e8af7" binding="_exportZone" layout-manager="FlowLayout" hgap="5" vgap="5" flow-align="1">
+                  <grid id="e8af7" binding="innerExportZone" layout-manager="FlowLayout" hgap="5" vgap="5" flow-align="1">
                     <constraints>
                       <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
                       <gridbag weightx="5.0" weighty="1.0"/>
