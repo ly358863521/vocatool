@@ -1,0 +1,447 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="com.ses.vocatool.MainWindow">
+  <grid id="311c6" binding="mainPanel" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+    <margin top="0" left="0" bottom="0" right="0"/>
+    <constraints>
+      <xy x="20" y="20" width="794" height="603"/>
+    </constraints>
+    <properties/>
+    <border type="none"/>
+    <children>
+      <grid id="27dc6" binding="submainPanel" layout-manager="GridBagLayout">
+        <constraints>
+          <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="7" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false">
+            <minimum-size width="640" height="480"/>
+            <preferred-size width="1024" height="720"/>
+          </grid>
+        </constraints>
+        <properties/>
+        <border type="none"/>
+        <children>
+          <grid id="2eca" binding="controlZone" layout-manager="GridBagLayout">
+            <constraints>
+              <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+              <gridbag weightx="3.0" weighty="9.0"/>
+            </constraints>
+            <properties>
+              <minimumSize width="300" height="900"/>
+              <preferredSize width="300" height="900"/>
+            </properties>
+            <border type="none"/>
+            <children>
+              <grid id="e3f79" binding="inputFile" layout-manager="GridBagLayout">
+                <constraints>
+                  <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                  <gridbag weightx="3.0" weighty="4.0"/>
+                </constraints>
+                <properties/>
+                <border type="none"/>
+                <children>
+                  <grid id="fa8d1" binding="inputPanel" layout-manager="GridBagLayout">
+                    <constraints>
+                      <grid row="0" column="0" row-span="1" col-span="2" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                      <gridbag weightx="3.0" weighty="1.0"/>
+                    </constraints>
+                    <properties/>
+                    <border type="none"/>
+                    <children>
+                      <grid id="9615f" binding="innerInputPanel" layout-manager="BorderLayout" hgap="0" vgap="0">
+                        <constraints>
+                          <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                          <gridbag weightx="3.0" weighty="0.0"/>
+                        </constraints>
+                        <properties/>
+                        <border type="none"/>
+                        <children>
+                          <component id="401d9" class="javax.swing.JRadioButton" binding="radioButton1" default-binding="true">
+                            <constraints border-constraint="West"/>
+                            <properties>
+                              <horizontalAlignment value="10"/>
+                              <text value=""/>
+                            </properties>
+                          </component>
+                          <component id="4437" class="javax.swing.JTextField" binding="textField1" default-binding="true">
+                            <constraints border-constraint="Center"/>
+                            <properties>
+                              <columns value="40"/>
+                              <editable value="true"/>
+                              <font name="Microsoft YaHei" size="16" style="0"/>
+                            </properties>
+                          </component>
+                        </children>
+                      </grid>
+                    </children>
+                  </grid>
+                  <grid id="a5bf8" binding="textPanel" layout-manager="GridBagLayout">
+                    <constraints>
+                      <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                      <gridbag weightx="3.0" weighty="2.0"/>
+                    </constraints>
+                    <properties/>
+                    <border type="none"/>
+                    <children>
+                      <grid id="299f4" binding="textGrid" layout-manager="BorderLayout" hgap="0" vgap="0">
+                        <constraints>
+                          <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                          <gridbag weightx="1.0" weighty="1.0"/>
+                        </constraints>
+                        <properties/>
+                        <border type="none"/>
+                        <children>
+                          <component id="a6be4" class="javax.swing.JRadioButton" binding="radioButton2" default-binding="true">
+                            <constraints border-constraint="West"/>
+                            <properties>
+                              <selected value="false"/>
+                              <text value=""/>
+                            </properties>
+                          </component>
+                          <scrollpane id="cea1a" binding="textS">
+                            <constraints border-constraint="Center"/>
+                            <properties/>
+                            <border type="none"/>
+                            <children>
+                              <component id="b2d77" class="javax.swing.JTextArea" binding="textArea1" default-binding="true">
+                                <constraints/>
+                                <properties>
+                                  <columns value="40"/>
+                                  <font name="Microsoft YaHei" size="16" style="0"/>
+                                  <lineWrap value="true"/>
+                                  <maximumSize width="600" height="200"/>
+                                  <rows value="5"/>
+                                  <wrapStyleWord value="true"/>
+                                </properties>
+                              </component>
+                            </children>
+                          </scrollpane>
+                        </children>
+                      </grid>
+                    </children>
+                  </grid>
+                  <grid id="f3007" binding="buttonPanel" layout-manager="GridBagLayout">
+                    <constraints>
+                      <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                      <gridbag weightx="3.0" weighty="1.0"/>
+                    </constraints>
+                    <properties/>
+                    <border type="none"/>
+                    <children>
+                      <grid id="b8c8" binding="buttonGrid" layout-manager="FlowLayout" hgap="5" vgap="5" flow-align="2">
+                        <constraints>
+                          <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                          <gridbag weightx="0.0" weighty="0.0"/>
+                        </constraints>
+                        <properties/>
+                        <border type="none"/>
+                        <children>
+                          <component id="cb6d" class="javax.swing.JButton" binding="importFileChooseButton">
+                            <constraints/>
+                            <properties>
+                              <text value="导入文件"/>
+                            </properties>
+                          </component>
+                          <component id="d2992" class="javax.swing.JButton" binding="generateButton">
+                            <constraints/>
+                            <properties>
+                              <text value="生成"/>
+                            </properties>
+                          </component>
+                          <component id="ca115" class="javax.swing.JButton" binding="dotPathButton">
+                            <constraints/>
+                            <properties>
+                              <text value="设置Dot程序路径"/>
+                            </properties>
+                          </component>
+                        </children>
+                      </grid>
+                    </children>
+                  </grid>
+                </children>
+              </grid>
+              <grid id="7318f" binding="functionTab" layout-manager="GridBagLayout">
+                <constraints>
+                  <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                  <gridbag weightx="0.0" weighty="5.0"/>
+                </constraints>
+                <properties/>
+                <border type="none"/>
+                <children>
+                  <tabbedpane id="93679" binding="tabbedPane1" default-binding="true">
+                    <constraints>
+                      <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false">
+                        <preferred-size width="200" height="200"/>
+                      </grid>
+                      <gridbag weightx="3.0" weighty="5.0"/>
+                    </constraints>
+                    <properties>
+                      <tabLayoutPolicy value="1"/>
+                      <tabPlacement value="1"/>
+                    </properties>
+                    <border type="none"/>
+                    <children>
+                      <grid id="7415" binding="randomTab" layout-manager="GridBagLayout">
+                        <constraints>
+                          <tabbedpane title="随机游走"/>
+                        </constraints>
+                        <properties>
+                          <enabled value="true"/>
+                        </properties>
+                        <border type="none"/>
+                        <children>
+                          <grid id="e8da6" binding="randomPanel" layout-manager="FlowLayout" hgap="5" vgap="5" flow-align="1">
+                            <constraints>
+                              <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                              <gridbag weightx="0.0" weighty="0.0"/>
+                            </constraints>
+                            <properties/>
+                            <border type="none"/>
+                            <children>
+                              <component id="2d4ff" class="javax.swing.JButton" binding="randomBegin">
+                                <constraints/>
+                                <properties>
+                                  <text value="随机生成"/>
+                                </properties>
+                                <clientProperties>
+                                  <html.disable class="java.lang.Boolean" value="false"/>
+                                </clientProperties>
+                              </component>
+                              <component id="6850b" class="javax.swing.JButton" binding="exportRoute">
+                                <constraints/>
+                                <properties>
+                                  <text value="导出路径"/>
+                                </properties>
+                              </component>
+                            </children>
+                          </grid>
+                        </children>
+                      </grid>
+                      <grid id="6e9bd" binding="shortestTab" layout-manager="GridBagLayout">
+                        <constraints>
+                          <tabbedpane title="最短路径"/>
+                        </constraints>
+                        <properties/>
+                        <border type="none"/>
+                        <children>
+                          <grid id="d2b8" binding="shortestBPanel" layout-manager="FlowLayout" hgap="5" vgap="5" flow-align="1">
+                            <constraints>
+                              <grid row="1" column="0" row-span="1" col-span="2" vsize-policy="3" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                              <gridbag weightx="3.0" weighty="2.0"/>
+                            </constraints>
+                            <properties/>
+                            <border type="none"/>
+                            <children>
+                              <component id="60df8" class="javax.swing.JButton" binding="singleSP">
+                                <constraints/>
+                                <properties>
+                                  <text value="显示最短路径"/>
+                                </properties>
+                              </component>
+                              <component id="e9370" class="javax.swing.JButton" binding="allSP">
+                                <constraints/>
+                                <properties>
+                                  <text value="所有最短路径"/>
+                                </properties>
+                              </component>
+                            </children>
+                          </grid>
+                          <grid id="49eb" binding="shortestPanelB" layout-manager="BorderLayout" hgap="0" vgap="0">
+                            <constraints>
+                              <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="2" fill="1" indent="0" use-parent-layout="false"/>
+                              <gridbag top="0" left="20" bottom="0" right="20" weightx="1.0" weighty="1.0"/>
+                            </constraints>
+                            <properties/>
+                            <border type="none"/>
+                            <children>
+                              <component id="a1089" class="javax.swing.JTextField" binding="textField3" default-binding="true">
+                                <constraints border-constraint="Center"/>
+                                <properties/>
+                              </component>
+                            </children>
+                          </grid>
+                          <grid id="47ae9" binding="shortestPanelA" layout-manager="BorderLayout" hgap="0" vgap="0">
+                            <constraints>
+                              <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="2" fill="1" indent="0" use-parent-layout="false"/>
+                              <gridbag top="0" left="20" bottom="0" right="20" weightx="1.0" weighty="1.0"/>
+                            </constraints>
+                            <properties/>
+                            <border type="none"/>
+                            <children>
+                              <component id="8424f" class="javax.swing.JTextField" binding="textField2">
+                                <constraints border-constraint="Center"/>
+                                <properties/>
+                              </component>
+                            </children>
+                          </grid>
+                        </children>
+                      </grid>
+                      <grid id="422ab" binding="newSPanel" layout-manager="GridBagLayout">
+                        <constraints>
+                          <tabbedpane title="生成新文本"/>
+                        </constraints>
+                        <properties/>
+                        <border type="none"/>
+                        <children>
+                          <grid id="558a4" binding="sArea" layout-manager="BorderLayout" hgap="0" vgap="0">
+                            <constraints>
+                              <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                              <gridbag weightx="1.0" weighty="2.0"/>
+                            </constraints>
+                            <properties/>
+                            <border type="none"/>
+                            <children>
+                              <scrollpane id="31ea3" binding="sPanelS">
+                                <constraints border-constraint="Center"/>
+                                <properties/>
+                                <border type="none"/>
+                                <children>
+                                  <component id="b0a96" class="javax.swing.JTextArea" binding="textArea2" default-binding="true">
+                                    <constraints/>
+                                    <properties>
+                                      <font name="Microsoft YaHei" size="16" style="0"/>
+                                      <lineWrap value="true"/>
+                                      <wrapStyleWord value="true"/>
+                                    </properties>
+                                  </component>
+                                </children>
+                              </scrollpane>
+                            </children>
+                          </grid>
+                          <grid id="fabec" binding="sCommit" layout-manager="GridBagLayout">
+                            <constraints>
+                              <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                              <gridbag weightx="1.0" weighty="1.0"/>
+                            </constraints>
+                            <properties/>
+                            <border type="none"/>
+                            <children>
+                              <component id="33ebd" class="javax.swing.JButton" binding="genNewText">
+                                <constraints>
+                                  <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                                  <gridbag weightx="0.0" weighty="0.0"/>
+                                </constraints>
+                                <properties>
+                                  <text value="生成"/>
+                                </properties>
+                              </component>
+                            </children>
+                          </grid>
+                        </children>
+                      </grid>
+                      <grid id="ee777" binding="bridgeTab" layout-manager="GridBagLayout">
+                        <constraints>
+                          <tabbedpane title="桥接点"/>
+                        </constraints>
+                        <properties/>
+                        <border type="none"/>
+                        <children>
+                          <grid id="74f3" binding="bButtonPanel" layout-manager="FlowLayout" hgap="5" vgap="5" flow-align="1">
+                            <constraints>
+                              <grid row="1" column="0" row-span="1" col-span="2" vsize-policy="3" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                              <gridbag weightx="3.0" weighty="2.0"/>
+                            </constraints>
+                            <properties/>
+                            <border type="none"/>
+                            <children>
+                              <component id="1fbd1" class="javax.swing.JButton" binding="showBridgeButton">
+                                <constraints/>
+                                <properties>
+                                  <text value="显示桥接点"/>
+                                </properties>
+                              </component>
+                            </children>
+                          </grid>
+                          <grid id="c78bd" binding="endPanelB" layout-manager="BorderLayout" hgap="0" vgap="0">
+                            <constraints>
+                              <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="2" fill="1" indent="0" use-parent-layout="false"/>
+                              <gridbag top="0" left="20" bottom="0" right="20" weightx="1.0" weighty="1.0"/>
+                            </constraints>
+                            <properties/>
+                            <border type="none"/>
+                            <children>
+                              <component id="5ddcd" class="javax.swing.JTextField" binding="endTextB">
+                                <constraints border-constraint="Center"/>
+                                <properties/>
+                              </component>
+                            </children>
+                          </grid>
+                          <grid id="1ee35" binding="endPointA" layout-manager="BorderLayout" hgap="0" vgap="0">
+                            <constraints>
+                              <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="2" fill="1" indent="0" use-parent-layout="false"/>
+                              <gridbag top="0" left="20" bottom="0" right="20" weightx="1.0" weighty="1.0"/>
+                            </constraints>
+                            <properties/>
+                            <border type="none"/>
+                            <children>
+                              <component id="a9d86" class="javax.swing.JTextField" binding="endTextA">
+                                <constraints border-constraint="Center"/>
+                                <properties/>
+                              </component>
+                            </children>
+                          </grid>
+                        </children>
+                      </grid>
+                    </children>
+                  </tabbedpane>
+                </children>
+              </grid>
+            </children>
+          </grid>
+          <grid id="4f25e" binding="imagePanel" layout-manager="GridBagLayout">
+            <constraints>
+              <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+              <gridbag weightx="6.0" weighty="9.0" ipadx="1" ipady="1"/>
+            </constraints>
+            <properties>
+              <opaque value="true"/>
+              <preferredSize width="600" height="900"/>
+            </properties>
+            <border type="none"/>
+            <children>
+              <grid id="f7345" binding="imageZone" layout-manager="BorderLayout" hgap="0" vgap="0">
+                <constraints>
+                  <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                  <gridbag weightx="5.0" weighty="8.0"/>
+                </constraints>
+                <properties/>
+                <border type="none"/>
+                <children>
+                  <component id="5a6e6" class="org.apache.batik.swing.JSVGCanvas" binding="svgPanel">
+                    <constraints border-constraint="Center"/>
+                    <properties>
+                      <background color="-986896"/>
+                    </properties>
+                  </component>
+                </children>
+              </grid>
+              <grid id="9dda5" binding="exportZone" layout-manager="GridBagLayout">
+                <constraints>
+                  <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                  <gridbag weightx="5.0" weighty="1.0"/>
+                </constraints>
+                <properties/>
+                <border type="none"/>
+                <children>
+                  <grid id="e8af7" binding="innerExportZone" layout-manager="FlowLayout" hgap="5" vgap="5" flow-align="1">
+                    <constraints>
+                      <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
+                      <gridbag weightx="5.0" weighty="1.0"/>
+                    </constraints>
+                    <properties/>
+                    <border type="none"/>
+                    <children>
+                      <component id="aa26c" class="javax.swing.JButton" binding="exportButton">
+                        <constraints/>
+                        <properties>
+                          <text value="导出"/>
+                        </properties>
+                      </component>
+                    </children>
+                  </grid>
+                </children>
+              </grid>
+            </children>
+          </grid>
+        </children>
+      </grid>
+    </children>
+  </grid>
+</form>
