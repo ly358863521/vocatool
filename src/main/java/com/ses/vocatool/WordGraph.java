@@ -1,19 +1,25 @@
+package com.ses.vocatool;
+
 import org.apache.batik.transcoder.TranscoderException;
 import org.apache.batik.transcoder.TranscoderInput;
 import org.apache.batik.transcoder.TranscoderOutput;
 import org.apache.batik.transcoder.image.PNGTranscoder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+
 /**
  * The type Dot path exception.
+ * Thrown when dot program is invalid.
  */
-// dot路径未找到
 class DotPathException extends Exception {
 }
 
@@ -24,25 +30,21 @@ class DotPathException extends Exception {
  */
 class LinkSource {
     /**
-     * Thread sleep time.
-     */
-    private static final int THREAD_SLEEP_TIME = 400;
-    /**
      * Edge start.
      */
-    private String start;
+    private final String start;
     /**
      * Edge end.
      */
-    private String end;
+    private final String end;
     /**
      * Weight of edge node.
      */
-    private int weight;
+    private final int weight;
     /**
      * If edge is marked.
      */
-    private boolean color = false;
+    private boolean color;
 
     /**
      * Constructor of {@code LinkSource}.
@@ -83,7 +85,7 @@ class LinkSource {
      *
      * @return Value of color.
      */
-    public boolean getColor() {
+    public final boolean getColor() {
         return color;
     }
 
@@ -92,7 +94,7 @@ class LinkSource {
      *
      * @param newColor Value of color.
      */
-    public void setColor(final boolean newColor) {
+    public final void setColor(final boolean newColor) {
         this.color = newColor;
     }
 }
@@ -106,11 +108,11 @@ class Node {
     /**
      * The Name.
      */
-    private String name;
+    private final String name;
     /**
      * The Weight.
      */
-    private int weight;
+    private short weight;
     /**
      * The Color.
      */
@@ -136,7 +138,7 @@ class Node {
      */
     Node(final String newName, final int newWeight, final boolean newColor) {
         this.name = newName;
-        this.weight = newWeight;
+        this.weight = (short)newWeight;
         this.color = newColor;
     }
 
@@ -157,10 +159,13 @@ class Node {
      */
     @Override
     public String toString() {
+        String result;
         if (color) {
-            return String.format("\t%s [color=red,weight=%d];", name, weight);
+            result = String.format("\t%s [color=red,weight=%d];", name, weight);
+        } else {
+            result = String.format("\t%s [weight=%d];", name, weight);
         }
-        return String.format("\t%s [weight=%d];", name, weight);
+        return result;
     }
 
     /**
@@ -168,7 +173,7 @@ class Node {
      *
      * @return the name
      */
-    public String getName() {
+    public final String getName() {
         return name;
     }
 
@@ -186,7 +191,7 @@ class Node {
      *
      * @return the color
      */
-    public boolean getColor() {
+    public final boolean getColor() {
         return color;
     }
 
@@ -195,7 +200,7 @@ class Node {
      *
      * @param newColor the color
      */
-    public void setColor(final boolean newColor) {
+    public final void setColor(final boolean newColor) {
         this.color = newColor;
     }
 }
@@ -221,49 +226,57 @@ public class WordGraph {
      */
     private static final int THREAD_SLEEP_TIME = 400;
     /**
+     * Log4j Logger
+     */
+    public static Logger logger = LoggerFactory.getLogger(WordGraph.class);
+    /**
      * Dot Processor path.
      */
     private static String dotPath;
     /**
      * Dot Processor status.
      */
-    private static boolean dotAvailable = false;
+    private static boolean dotAvailable;
     /**
      * String for test purpose. Remove in further code.
      */
-    private static String testString = null;
+    private static String testString;
     /**
      * Source string.
      */
-    private String sourceString;
+    private final String sourceString;
     /**
      * String Array.
      */
-    private String[] stringArray, wordArray;
+    private final String[] stringArray, wordArray;
     /**
      * nodeCount.
      */
-    private int nodeCount;
+    private final int nodeCount;
     /**
      * Weight of every unique word.
      */
-    private Map<String, Integer> wordWeight;
+    private final Map<String, Integer> wordWeight;
     /**
      * Array List of node.
      */
-    private ArrayList<String> nodeList;
+    private final ArrayList<String> nodeList;
     /**
      * Linked List of edges.
      */
-    private LinkedList<LinkSource> linkSourcesList;
+    private final LinkedList<LinkSource> linkSourcesList;
     /**
      * Graph node List.
      */
-    private Map<String, Node> graphNodeList;
+    private final Map<String, Node> graphNodeList;
     /**
      * Array of weight.
      */
-    private int[][] weightArray;
+    private final int[][] weightArray;
+    /**
+     * Word-classified direct connections.
+     */
+    private final Integer[][] nextWord, prevWord;
     /**
      * If edge is marked.
      */
@@ -273,18 +286,19 @@ public class WordGraph {
      */
     private boolean[] nodeIsMarked;
     /**
-     * Word-classified direct connections.
+     *  Global Timeout.
      */
-    private Integer[][] nextWord, prevWord;
+    private static final int GLOBAL_TIMEOUT = 1000;
 
     /**
      * Instantiates a new Word graph.
      *
-     * @param s the s
+     * @param stringInput the stringInput
      */
-    public WordGraph(final String s) {
+    public WordGraph(final String stringInput) {
         // Preprocessor
-        sourceString = s.replaceAll("[^A-Za-z\\s]", "").toLowerCase();
+        sourceString = stringInput.replaceAll("[^A-Za-z\\s]", "")
+                .toLowerCase(Locale.SIMPLIFIED_CHINESE);
         stringArray = sourceString.split("\\s+");
         final HashSet<String> nodeSet = new HashSet<>();
         Collections.addAll(nodeSet, stringArray);
@@ -387,17 +401,23 @@ public class WordGraph {
      * @throws DotPathException dot程序无响应或者响应不符合预期
      */
     public static String testDotPath() throws IOException, DotPathException {
+        final Object lock = new Object();
         final Thread testThread = new Thread(() -> {
             try {
-                Process p = Runtime.getRuntime().exec(dotPath + " -V");
-                BufferedReader br = new BufferedReader(
-                        new InputStreamReader(p.getErrorStream()));
-                String line = null;
-                StringBuilder sb = new StringBuilder();
-                while ((line = br.readLine()) != null) {
-                    sb.append(line + "\n");
+                logger.debug("Test thread.");
+                synchronized (WordGraph.class) {
+                    Process p = Runtime.getRuntime().exec(dotPath + " -V");
+                    BufferedReader br = new BufferedReader(
+                            new InputStreamReader(p.getErrorStream()));
+                    String line = null;
+                    StringBuilder sb = new StringBuilder();
+                    while ((line = br.readLine()) != null) {
+                        sb.append(line);
+                        sb.append('\n');
+                    }
+                    WordGraph.testString = sb.toString();
+                    WordGraph.class.notify();
                 }
-                WordGraph.testString = sb.toString();
             } catch (InterruptedIOException e) {
                 testString = "No Response.";
             } catch (IOException e) {
@@ -405,22 +425,27 @@ public class WordGraph {
             }
         });
         testThread.start();
-        try {
-            Thread.sleep(THREAD_SLEEP_TIME);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+
+        synchronized (WordGraph.class) {
+            try {
+            WordGraph.class.wait(GLOBAL_TIMEOUT);
+            } catch (InterruptedException e) {
+                logger.debug("Abnormal interruption.");
+            }
+            logger.debug("Validation Thread.");
+            if (testString == null) {
+                WordGraph.dotAvailable = false;
+                throw new IOException();
+            }
+            if (testString.equals("No Response.")) {
+                WordGraph.dotAvailable = false;
+                throw new DotPathException();
+            }
+            if (testString.contains("dot") && testString.contains("graphviz")) {
+                WordGraph.dotAvailable = true;
+            }
+            return testString;
         }
-        testThread.interrupt();
-        if (testString == null) {
-            throw new IOException();
-        }
-        if (testString.contains("dot") && testString.contains("graphviz")) {
-            WordGraph.dotAvailable = true;
-        }
-        if (testString.equals("No Response.")) {
-            throw new DotPathException();
-        }
-        return testString;
     }
 
     /**
@@ -448,12 +473,12 @@ public class WordGraph {
             writer.write("digraph G{");
             writer.newLine();
             // Color node
-            for (final Node i : this.graphNodeList.values()) {
+            for (Node i : this.graphNodeList.values()) {
                 writer.write(i.toString());
                 writer.newLine();
             }
             // Add edges
-            for (final LinkSource linkSource : this.linkSourcesList) {
+            for (LinkSource linkSource : this.linkSourcesList) {
                 writer.write(linkSource.toString());
                 writer.newLine();
             }
@@ -484,19 +509,18 @@ public class WordGraph {
                             WordGraph.dotPath,
                             dotTemp.getAbsolutePath(),
                             svgTemp.getAbsolutePath()));
-            while (p.isAlive()) {
-                try {
-                    Thread.sleep(ITERATION_TIME);
-                    System.out.println("Wait for 10ms");
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+            try {
+                p.waitFor(GLOBAL_TIMEOUT, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e) {
+                logger.debug("dot.exe is timeout.");
+                p.destroy();
             }
             // Fix incompatible svg line.
             // 0x01 212D2D20
             // 0x31 22202D2D
             /*
-             * 此处由于是Dot的Bug, 必须使用这种硬编码方式解决。
+             * 此处由于是Dot的Bug, 必须使用这种硬编码方式解决.
+             * dot.exe产生的svg与apache jsvgcanvas不兼容，通过修改这两处的数据，可以一定程度上解决此问题.
              */
             final RandomAccessFile raf = new RandomAccessFile(svgTemp, "rw");
             raf.seek(0x01);
@@ -553,8 +577,8 @@ public class WordGraph {
             this.graphNodeList.values().stream().forEach(node -> {
                 node.setColor(false);
             });
-            final HashSet<Integer> aConnection = new HashSet<>();
-            final HashSet<Integer> bConnection = new HashSet<>();
+            HashSet<Integer> aConnection = new HashSet<>();
+            HashSet<Integer> bConnection = new HashSet<>();
             Collections.addAll(aConnection,
                     Arrays.copyOfRange(nextWord[getIndex(a)], 1,
                             nextWord[getIndex(a)][0] + 1));
@@ -563,7 +587,7 @@ public class WordGraph {
                             1, prevWord[getIndex(b)][0] + 1));
             aConnection.retainAll(bConnection);
             String[] result = new String[aConnection.size()];
-            final Integer[] indexArray = aConnection.toArray(
+            Integer[] indexArray = aConnection.toArray(
                     new Integer[aConnection.size()]);
             for (int i = 0; i < aConnection.size(); i++) {
                 result[i] = wordArray[indexArray[i]];
@@ -571,7 +595,7 @@ public class WordGraph {
             }
             // Color
             Arrays.fill(nodeIsMarked, false);
-            for (final Integer i : indexArray) {
+            for (Integer i : indexArray) {
                 nodeIsMarked[i] = true;
             }
             // Redraw Graph
@@ -615,28 +639,28 @@ public class WordGraph {
             throws DotPathException {
         final int start = getIndex(begin);
         if (start >= 0) {
-            final ConcurrentMap<Integer, List<Integer>> map =
+            ConcurrentMap<Integer, List<Integer>> map =
                     new ConcurrentHashMap<>();
             int[] wordDistance = new int[nodeCount];
             // 保存从某一点出发时，两点最短距离
             Arrays.fill(wordDistance, WordGraph.UNREACHABLE);
-            final LinkedList<Integer> stack = new LinkedList<>();
+            LinkedList<Integer> stack = new LinkedList<>();
             stack.push(start);
             int nowDistance = 0;
             wordDistance[start] = nowDistance;
             while (true) { // 渐进遍历未遍历到终点
                 boolean added = false;
-                final Set<Integer> keySet = new HashSet<>(map.keySet());
+                Set<Integer> keySet = new HashSet<>(map.keySet());
                 // 在现在这一层深度有的节点
                 nowDistance++; // 遍历深度
-                for (final Integer i : stack) {
+                for (Integer i : stack) {
                     // From i to j
                     for (int j = 1; j <= nextWord[i][0]; j++) {
                         if (!keySet.contains(nextWord[i][j])
                                 && wordDistance[nextWord[i][j]]
                                 >= nowDistance) {
                             // 判断是否是下一层的节点:是否出现在前几层
-                            final List<Integer> linkedList =
+                            List<Integer> linkedList =
                                     map.getOrDefault(nextWord[i][j],
                                             new LinkedList<>());
                             // 列表中保存的是所有的前一个元素
@@ -649,7 +673,7 @@ public class WordGraph {
                     }
                 }
                 stack.clear();
-                final Set<Integer> newSet = new HashSet<>(map.keySet());
+                Set<Integer> newSet = new HashSet<>(map.keySet());
                 newSet.removeAll(keySet);
                 stack.addAll(newSet);
                 // 遍历完毕
@@ -657,17 +681,17 @@ public class WordGraph {
                     break; // 不可达
                 }
             }
-            for (final Integer end : map.keySet()) {
-                final List<List<Integer>> results = new ArrayList<>();
+            for (Integer end : map.keySet()) {
+                List<List<Integer>> results = new ArrayList<>();
                 dfs(map, new LinkedList<>(), results, start, end);
 
                 for (int routeNumber = 0;
                      routeNumber < results.size();
                      routeNumber++) {
-                    final List<Integer> route = results.get(routeNumber);
+                    List<Integer> route = results.get(routeNumber);
                     this.cleanMark();
                     this.linkSourcesList.clear();
-                    for (final Integer i : route) {
+                    for (Integer i : route) {
                         nodeIsMarked[i] = true;
                     }
                     for (int i = 0; i < route.size() - 1; i++) {
@@ -681,7 +705,7 @@ public class WordGraph {
             }
             return svgFile.keySet().toArray(new String[map.size()]);
         }
-        return null;
+        return new String[0];
     }
 
     /**
@@ -820,7 +844,7 @@ public class WordGraph {
             final List<List<Integer>> results = new ArrayList<>();
             dfs(map, new LinkedList<Integer>(), results, start, end);
 
-            for (final List<Integer> route : results) {
+            for (List<Integer> route : results) {
                 this.cleanMark();
                 for (final Integer i : route) {
                     nodeIsMarked[i] = true;
@@ -836,18 +860,6 @@ public class WordGraph {
         return null;
     }
 
-    /**
-     * Absolue value.
-     *
-     * @param i value.
-     * @return abs.
-     */
-    private Integer abs(final Integer i) {
-        if (i < 0) {
-            return -i;
-        }
-        return i;
-    }
 
     /**
      * Generate new text string.
@@ -861,14 +873,15 @@ public class WordGraph {
         final StringBuilder sb = new StringBuilder();
         for (int i = 0; i < sentenceArray.length - 1; i++) {
             final String[] bridge = bridgeWord(sentenceArray[i].
-                            toLowerCase().replaceAll("[^A-Za-z\\s]", ""),
-                    sentenceArray[i + 1].toLowerCase()
+                            toLowerCase(Locale.SIMPLIFIED_CHINESE)
+                            .replaceAll("[^A-Za-z\\s]", ""),
+                    sentenceArray[i + 1].toLowerCase(Locale.SIMPLIFIED_CHINESE)
                             .replaceAll("[^A-Za-z\\s]", ""));
             sb.append(sentenceArray[i]);
-            sb.append(" ");
+            sb.append(' ');
             if (bridge.length > 0) {
                 sb.append(bridge[random.nextInt(bridge.length)]);
-                sb.append(" ");
+                sb.append(' ');
             }
         }
         sb.append(sentenceArray[sentenceArray.length - 1]);
@@ -882,12 +895,15 @@ public class WordGraph {
      * @param path 节点List
      */
     private void randomList(final List<String> path) {
-        Random random = new Random();
+        final Random random = new Random();
         int start = random.nextInt(nodeCount);
         this.cleanMark();
         while (true) {
-            if (this.nextWord[start][0] != 0) {
-                int nextStart = this.nextWord[start]
+            if (this.nextWord[start][0] == 0) {
+                path.add(wordArray[start]);
+                break;
+            } else {
+                final int nextStart = this.nextWord[start]
                         [random.nextInt(this.nextWord[start][0]) + 1];
                 if (this.edgeIsMarked[start][nextStart]) {
                     path.add(wordArray[start]);
@@ -898,9 +914,6 @@ public class WordGraph {
                 this.nodeIsMarked[nextStart] = true;
                 path.add(wordArray[start]);
                 start = nextStart;
-            } else {
-                path.add(wordArray[start]);
-                break;
             }
         }
     }
@@ -918,7 +931,7 @@ public class WordGraph {
         this.graphNodeList.values().stream().forEach(node -> {
             node.setColor(false);
         });
-        LinkedList<String> path = new LinkedList<>();
+        final LinkedList<String> path = new LinkedList<>();
         return String.join(" ", path);
     }
 
@@ -931,7 +944,7 @@ public class WordGraph {
      */
     public String queryBridgeWords(final String word1, final String word2) {
         try {
-            String[] res = this.bridgeWord(word1, word2);
+            final String[] res = this.bridgeWord(word1, word2);
             switch (res.length) {
                 case 0:
                     return "No bridge words from word1 to word2!";

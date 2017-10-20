@@ -1,8 +1,11 @@
-/*
+package com.ses.vocatool;/*
  * Created by dings on 2017/9/6.
  * Minimum JRE : 1.8
  */
 
+
+import com.ses.vocatool.DotPathException;
+import com.ses.vocatool.WordGraph;
 
 import javax.swing.*;
 import java.awt.*;
@@ -20,7 +23,7 @@ public class libtest {
 //        frameInitialize(mainFrame);
 //        mainFrame.setVisible(true);
 //    }
-    public static void main(String[] args) throws dotPathException{
+    public static void main(String[] args) throws DotPathException {
         WordGraph.setDotPath("D:\\graphviz-2.38\\release\\bin\\dot.exe");
         try{System.out.println(WordGraph.testDotPath());}
         catch(Exception e){
@@ -35,9 +38,9 @@ public class libtest {
         try{
             System.out.println(wordGraph.exportSVGFile());
         }
-        catch (dotPathException d){
+        catch (DotPathException d){
             d.printStackTrace();
-        };
+        }
         BufferedImage bufferedImage = null;
         System.out.println(wordGraph.dotGenerate().getAbsolutePath());
         JFrame jFrame = new JFrame();

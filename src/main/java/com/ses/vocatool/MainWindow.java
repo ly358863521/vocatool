@@ -1,5 +1,9 @@
+package com.ses.vocatool;
+
 import org.apache.batik.swing.JSVGCanvas;
 import org.apache.batik.transcoder.TranscoderException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -10,11 +14,18 @@ import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.io.*;
 import java.util.*;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * The type Main window.
  */
 public class MainWindow {
+    /**
+     * Log4j Logger
+     */
+    public static org.slf4j.Logger logger = LoggerFactory.getLogger(MainWindow.class);
     /**
      * Declare tabbedPane1.
      */
@@ -283,18 +294,21 @@ public class MainWindow {
     /**
      * Declare list of random Route.
      */
-    private LinkedList<String> randomRoute;
+    private List<String> randomRoute;
+
+    public static final String ERROR_MESSAGE = "错误", NOTICE_MESSAGE = "提示", DOT_INVALID = "Dot程序无响应或未配置！";
 
     /**
      * Instantiates a new Main window.
      */
     MainWindow() {
         // 导入按钮
-        importFileChooseButton.addActionListener((ActionEvent e) -> {
-            JFileChooser jFileChooser = new JFileChooser();
+        importFileChooseButton.addActionListener((ActionEvent
+                                                          e) -> {
+            final JFileChooser jFileChooser = new JFileChooser();
             jFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
             jFileChooser.showDialog(new JLabel(), "导入");
-            File file = jFileChooser.getSelectedFile();
+            final File file = jFileChooser.getSelectedFile();
             if (file != null && file.isFile()) {
                 textField1.setText(file.getAbsolutePath());
                 radioButton1.setSelected(true);
@@ -303,7 +317,7 @@ public class MainWindow {
                 chosenFile = file;
             } else {
                 JOptionPane.showMessageDialog(mainPanel,
-                        "未选择任何文件！", "提示", JOptionPane.WARNING_MESSAGE);
+                        "未选择任何文件！", NOTICE_MESSAGE, JOptionPane.WARNING_MESSAGE);
                 textField1.setText("");
             }
         });
@@ -320,7 +334,7 @@ public class MainWindow {
                             new BufferedReader(new FileReader(chosenFile));
                     StringBuilder document = new StringBuilder();
                     while (true) {
-                        String read = bufferedReader.readLine();
+                        final String read = bufferedReader.readLine();
                         if (read == null) {
                             break;
                         }
@@ -331,7 +345,7 @@ public class MainWindow {
                     // File is missing after selected.
                     JOptionPane.showMessageDialog(mainPanel,
                             "文件读取失败！",
-                            "错误",
+                            ERROR_MESSAGE,
                             JOptionPane.ERROR_MESSAGE);
                 }
             } else if (radioButton2.isSelected()) {
@@ -360,11 +374,12 @@ public class MainWindow {
 //                        svgPanel.setEnableZoomInteractor(true);
             } catch (DotPathException d0) {
                 JOptionPane.showMessageDialog(mainPanel,
-                        "Dot程序无响应或未配置！",
-                        "错误",
+                        DOT_INVALID,
+                        ERROR_MESSAGE,
                         JOptionPane.ERROR_MESSAGE);
                 d0.printStackTrace();
             }
+            System.gc();
         });
         // 自动选择
         textArea1.addFocusListener(new FocusAdapter() {
@@ -389,15 +404,15 @@ public class MainWindow {
             public void actionPerformed(final ActionEvent e) {
                 ArrayList<File> fileList = new ArrayList<>();
                 try {
-                    Integer res = wordGraph.shortestPath(textField2.getText().toLowerCase(),
-                            textField3.getText().toLowerCase(), fileList);
+                    Integer res = wordGraph.shortestPath(textField2.getText().toLowerCase(Locale.SIMPLIFIED_CHINESE),
+                            textField3.getText().toLowerCase(Locale.SIMPLIFIED_CHINESE), fileList);
                     if (res == null || res == WordGraph.UNREACHABLE) {
                         JOptionPane.showMessageDialog(mainPanel,
                                 "未找到最短路径。",
                                 "警告",
                                 JOptionPane.WARNING_MESSAGE);
                     } else {
-                        if (fileList.size() == 1) {
+                        if (1 == fileList.size()) {
                             JOptionPane.showMessageDialog(mainPanel,
                                     String.format("最短路径长度为%d.", res),
                                     "查找到最短路径",
@@ -412,7 +427,7 @@ public class MainWindow {
                                     JOptionPane.YES_NO_OPTION);
                             if (reply == JOptionPane.YES_OPTION) {
                                 ArrayList<JRadioButton> radioButtonList = new ArrayList<>();
-                                JPanel boxPanel = new JPanel();
+                                final JPanel boxPanel = new JPanel();
                                 boxPanel.setLayout(new BoxLayout(boxPanel, BoxLayout.Y_AXIS));
                                 JSVGCanvas svgCanvas = new JSVGCanvas();
                                 // Add radio button
@@ -471,10 +486,11 @@ public class MainWindow {
                 } catch (DotPathException d0) {
                     d0.printStackTrace();
                     JOptionPane.showMessageDialog(mainPanel,
-                            "Dot程序无响应或未配置！",
-                            "错误",
+                            DOT_INVALID,
+                            ERROR_MESSAGE,
                             JOptionPane.ERROR_MESSAGE);
                 }
+                System.gc();
             }
         });
         // 桥接词
@@ -484,12 +500,12 @@ public class MainWindow {
                 try {
                     try {
                         wordGraph.bridgeWord(
-                                endTextA.getText().toLowerCase(),
-                                endTextB.getText().toLowerCase());
+                                endTextA.getText().toLowerCase(Locale.SIMPLIFIED_CHINESE),
+                                endTextB.getText().toLowerCase(Locale.SIMPLIFIED_CHINESE));
                     } catch (ArrayIndexOutOfBoundsException e2) {
                         JOptionPane.showMessageDialog(mainPanel,
                                 "图中没有这两个词！",
-                                "错误", JOptionPane.ERROR_MESSAGE);
+                                ERROR_MESSAGE, JOptionPane.ERROR_MESSAGE);
                     }
                     String svgPath =
                             wordGraph.exportSVGFile().toURI().toString();
@@ -498,10 +514,11 @@ public class MainWindow {
                     svgPanel.setURI(svgPath);
                 } catch (DotPathException d0) {
                     JOptionPane.showMessageDialog(mainPanel,
-                            "Dot程序无响应或未配置！",
-                            "错误", JOptionPane.ERROR_MESSAGE);
+                            DOT_INVALID,
+                            ERROR_MESSAGE, JOptionPane.ERROR_MESSAGE);
                     d0.printStackTrace();
                 }
+                System.gc();
             }
         });
         // dot.exe 程序选择
@@ -517,7 +534,13 @@ public class MainWindow {
                 WordGraph.setDotPath(file.getAbsolutePath());
                 try {
                     String response = WordGraph.testDotPath();
-                    if (!response.toLowerCase().contains("graphviz")) {
+                    if (response.toLowerCase(Locale.SIMPLIFIED_CHINESE).contains("graphviz")) {
+                        JOptionPane.showMessageDialog(mainPanel,
+                                "成功调用！\n" + response,
+                                NOTICE_MESSAGE,
+                                JOptionPane.PLAIN_MESSAGE);
+
+                    } else {
                         int i = JOptionPane.showConfirmDialog(
                                 mainPanel,
                                 "Dot程序可能有问题。是否继续使用？\n" + response,
@@ -526,24 +549,19 @@ public class MainWindow {
                         if (i == JOptionPane.NO_OPTION) {
                             dotPathButton.getAction().actionPerformed(e);
                         }
-                    } else {
-                        JOptionPane.showMessageDialog(mainPanel,
-                                "成功调用！\n" + response,
-                                "提示",
-                                JOptionPane.PLAIN_MESSAGE);
-
                     }
                 } catch (IOException i0) {
                     JOptionPane.showMessageDialog(mainPanel,
                             "Dot程序无法调用！",
-                            "错误",
+                            ERROR_MESSAGE,
                             JOptionPane.ERROR_MESSAGE);
                 } catch (DotPathException i0) {
                     JOptionPane.showMessageDialog(mainPanel,
                             "Dot程序无响应！",
-                            "错误",
+                            ERROR_MESSAGE,
                             JOptionPane.ERROR_MESSAGE);
                 }
+                System.gc();
             }
         });
         // 生成新文本
@@ -551,21 +569,23 @@ public class MainWindow {
             @Override
             public void actionPerformed(final ActionEvent e) {
                 Random random = new Random();
-                String[] sentenceArray = textArea2.getText().split("\\s");
+                final String[] sentenceArray = textArea2.getText().split("\\s");
                 StringBuilder sb = new StringBuilder();
                 for (int i = 0; i < sentenceArray.length - 1; i++) {
                     String[] bridge = wordGraph.bridgeWord(
-                            sentenceArray[i].toLowerCase()
+                            sentenceArray[i].toLowerCase(Locale.SIMPLIFIED_CHINESE)
                                     .replaceAll("[^A-Za-z\\s]", ""),
-                            sentenceArray[i + 1].toLowerCase()
+                            sentenceArray[i + 1].toLowerCase(Locale.SIMPLIFIED_CHINESE)
                                     .replaceAll("[^A-Za-z\\s]", ""));
                     sb.append(sentenceArray[i] + " ");
                     if (bridge.length > 0) {
-                        sb.append(bridge[random.nextInt(bridge.length)] + " ");
+                        sb.append(bridge[random.nextInt(bridge.length)]);
+                        sb.append(' ');
                     }
                 }
                 sb.append(sentenceArray[sentenceArray.length - 1]);
                 textArea2.setText(sb.toString());
+                System.gc();
             }
         });
         // 导出
@@ -600,21 +620,22 @@ public class MainWindow {
                     t.printStackTrace();
                 } catch (DotPathException d) {
                     JOptionPane.showMessageDialog(mainPanel,
-                            "dot\u7a0b\u5e8f\u672a\u914d\u7f6e\u3002",
-                            "错误", JOptionPane.ERROR_MESSAGE);
+                            "dot程序未配置。",
+                            ERROR_MESSAGE, JOptionPane.ERROR_MESSAGE);
                 } catch (FileNotFoundException f) {
                     JOptionPane.showMessageDialog(
                             mainPanel,
-                            "\u65e0\u6cd5\u521b\u5efa\u6587\u4ef6\u3002",
-                            "错误", JOptionPane.ERROR_MESSAGE);
+                            "无法创建文件。",
+                            ERROR_MESSAGE, JOptionPane.ERROR_MESSAGE);
                 }
+                System.gc();
             }
         });
         // 单源最短路径
         allSP.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(final ActionEvent e) {
-                Map<String, File> fileMap = new HashMap<>();
+                ConcurrentMap<String, File> fileMap = new ConcurrentHashMap<>();
                 try {
                     String[] endpoint =
                             wordGraph.allShortestPath(
@@ -626,7 +647,7 @@ public class MainWindow {
                             new BoxLayout(boxPanel, BoxLayout.Y_AXIS));
                     JSVGCanvas svgCanvas = new JSVGCanvas();
                     // Add radio button
-                    for (String s : endpoint) {
+                    for (final String s : endpoint) {
                         File file = fileMap.get(s);
                         if (file != null && file.exists()) {
                             JRadioButton jRadioButton = new JRadioButton(s);
@@ -668,8 +689,8 @@ public class MainWindow {
                     subFrame.setSize(800, 600);
                     subFrame.setVisible(true);
                 } catch (DotPathException d0) {
-                    JOptionPane.showMessageDialog(mainPanel, "dot程序未配置。",
-                            "错误", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(mainPanel, DOT_INVALID,
+                            ERROR_MESSAGE, JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
@@ -684,10 +705,11 @@ public class MainWindow {
                     randomRoute = path;
                 } catch (DotPathException d0) {
                     JOptionPane.showMessageDialog(
-                            mainPanel, "dot程序未配置。",
-                            "错误", JOptionPane.ERROR_MESSAGE);
+                            mainPanel, DOT_INVALID,
+                            ERROR_MESSAGE, JOptionPane.ERROR_MESSAGE);
                     d0.printStackTrace();
                 }
+                System.gc();
             }
         });
         // 导出随机游走
@@ -710,15 +732,16 @@ public class MainWindow {
                         JOptionPane.PLAIN_MESSAGE);
                 try {
                     BufferedWriter writer =
-                            new BufferedWriter(new FileWriter(file));
+                            new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file),"UTF-8"));
                     writer.write(String.join(delimiter, randomRoute));
                     writer.newLine();
                     writer.close();
                 } catch (IOException i0) {
                     JOptionPane.showMessageDialog(
                             mainPanel, "文件无法写入!",
-                            "错误", JOptionPane.ERROR_MESSAGE);
+                            ERROR_MESSAGE, JOptionPane.ERROR_MESSAGE);
                 }
+                System.gc();
             }
         });
     }
